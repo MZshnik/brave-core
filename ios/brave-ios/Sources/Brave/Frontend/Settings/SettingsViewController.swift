@@ -214,8 +214,6 @@ class SettingsViewController: TableViewController {
     super.viewWillAppear(animated)
     // Reset dev options access count
     aboutHeaderTapCount = 0
-    // Hide toolbar in case it was enabled by a child controller
-    navigationController?.setToolbarHidden(true, animated: animated)
   }
 
   private func displayRewardsDebugMenu() {
@@ -1316,7 +1314,7 @@ class SettingsViewController: TableViewController {
               let autofillDataManager = braveCore.defaultWebViewConfiguration.autofillDataManager
             {
               let viewModel = ManagePasswordsViewModel(autofillDataManager: autofillDataManager)
-              let controller = UIHostingController(
+              let controller = AutofillSettingsHostingController(
                 rootView:
                   ManagePasswordsView(viewModel: viewModel)
                   .environment(
@@ -1329,7 +1327,6 @@ class SettingsViewController: TableViewController {
               )
 
               navigationController?.pushViewController(controller, animated: true)
-              navigationController?.setToolbarHidden(false, animated: true)
             } else {
               let loginsPasswordsViewController = LoginListViewController(
                 passwordAPI: passwordAPI,
