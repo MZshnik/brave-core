@@ -1503,7 +1503,7 @@ public class BytecodeTest {
                         DataSharingTabManager.class,
                         TabContentManager.class,
                         TabCreatorManager.class,
-                        Supplier.class,
+                        MonotonicObservableSupplier.class,
                         OmniboxActionDelegateImpl.class,
                         MonotonicObservableSupplier.class,
                         boolean.class,
