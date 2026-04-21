@@ -1027,6 +1027,9 @@ void AdsServiceImpl::ShutdownAdsService() {
 #endif
 
   application_state_monitor_observation_.Reset();
+  // TODO(tmancey): ApplicationStateMonitor is only used by this service, does
+  // it need to be a singleton?
+  ApplicationStateMonitor::GetInstance()->Reset();
 
   CloseAllNotificationAds();
 
