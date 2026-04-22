@@ -502,7 +502,7 @@
     Improving your answer with Brave Search…
   </message>
   <message name="IDS_CHAT_UI_SEARCH_QUERIES" desc="AI Response status to indicate that search queries were used to enhance the response" formatter_data="webui=AiChat">
-    Improved answer searching for <ph name="SEARCH_TERMS">$1<ex>"my first search engine query", "my second search engine query"</ex></ph>.
+    Searching the web for <ph name="SEARCH_TERMS">$1<ex>"my first search engine query", "my second search engine query"</ex></ph>.
   </message>
   <message name="IDS_CHAT_UI_SOURCES" desc="Heading for a list of website sources that were used to generate an AI chat response" formatter_data="webui=AiChat">
     Sources
@@ -916,7 +916,7 @@
     Code Execution
   </message>
   <message name="IDS_CHAT_UI_TOOL_LABEL_CODE_EXECUTION" desc="Title for code execution tool event" formatter_data="webui=AiChat">
-    Executed code in sandbox to help with your query
+    Executing code in sandbox to help with your query
   </message>
   <message name="IDS_CHAT_UI_CODE_EXECUTION_CODE_LABEL" desc="Label for code section in code execution tool" formatter_data="webui=AiChat">
     Code:
@@ -934,6 +934,9 @@
   </if>
   <message name="IDS_CHAT_UI_TOOL_LABEL_DEEP_RESEARCH" desc="Display label for the deep research tool shown above results" formatter_data="webui=AiChat">
     Deep Research
+  </message>
+  <message name="IDS_CHAT_UI_PROGRESS_SEARCHING">
+    Searching
   </message>
   <!-- Deep Research strings -->
   <message name="IDS_CHAT_UI_DEEP_RESEARCH_SEARCHING" desc="Deep research status showing a search query in progress" formatter_data="webui=AiChat">
