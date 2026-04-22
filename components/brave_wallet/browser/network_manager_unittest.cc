@@ -231,7 +231,7 @@ TEST_F(NetworkManagerUnitTest, GetAllChainsTest) {
       },
       {});
 
-  EXPECT_EQ(network_manager()->GetAllChains().size(), 26u);
+  EXPECT_EQ(network_manager()->GetAllChains().size(), 31u);
   for (auto& chain : network_manager()->GetAllChains()) {
     EXPECT_TRUE(chain->rpc_endpoints[0].is_valid());
     EXPECT_EQ(chain->active_rpc_endpoint_index, 0);
@@ -372,16 +372,20 @@ TEST_F(NetworkManagerUnitTest, GetAllChainsTest) {
   network_manager()->AddCustomNetwork(polkadot_main_custom);
 
   auto polkadot_chains = get_all_chains_for_coin(mojom::CoinType::DOT);
-  ASSERT_EQ(polkadot_chains.size(), 2u);
+  ASSERT_EQ(polkadot_chains.size(), 7u);
   EXPECT_EQ(polkadot_chains[0]->chain_id, mojom::kPolkadotMainnet);
   EXPECT_EQ(polkadot_chains[0]->decimals, 123);
-  EXPECT_EQ(polkadot_chains[1]->chain_id, mojom::kPolkadotTestnet);
-  EXPECT_THAT(polkadot_chains[0]->supported_keyrings,
-              ElementsAreArray({mojom::KeyringId::kPolkadotMainnet,
-                                mojom::KeyringId::kPolkadotImport}));
-  EXPECT_THAT(polkadot_chains[1]->supported_keyrings,
-              ElementsAreArray({mojom::KeyringId::kPolkadotTestnet,
-                                mojom::KeyringId::kPolkadotImportTestnet}));
+  EXPECT_EQ(polkadot_chains[1]->chain_id, mojom::kAcalaMainnet);
+  EXPECT_EQ(polkadot_chains[2]->chain_id, mojom::kMoonbeamMainnet);
+  EXPECT_EQ(polkadot_chains[3]->chain_id, mojom::kBifrostMainnet);
+  EXPECT_EQ(polkadot_chains[4]->chain_id, mojom::kPolkadotTestnet);
+  EXPECT_EQ(polkadot_chains[5]->chain_id, mojom::kAssetsHubTestnet);
+  EXPECT_EQ(polkadot_chains[6]->chain_id, mojom::kCollectivesTestnet);
+  for (const auto& chain : polkadot_chains) {
+    EXPECT_THAT(chain->supported_keyrings,
+                ElementsAreArray(GetSupportedKeyringsForKnownNetwork(
+                    chain->coin, chain->chain_id)));
+  }
 
   static_assert(AllCoinsTested<7>());
 

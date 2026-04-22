@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "base/notimplemented.h"
-#include "base/strings/string_number_conversions.h"
 #include "brave/components/brave_wallet/browser/account_resolver_delegate.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/brave_wallet/browser/keyring_service.h"
@@ -19,7 +18,6 @@
 #include "brave/components/brave_wallet/browser/polkadot/polkadot_wallet_service.h"
 #include "brave/components/brave_wallet/browser/tx_service.h"
 #include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
-#include "brave/components/brave_wallet/common/common_utils.h"
 #include "components/grit/brave_components_strings.h"
 #include "ui/base/l10n/l10n_util.h"
 
@@ -153,10 +151,9 @@ void PolkadotTxManager::AddUnapprovedPolkadotTransaction(
     mojom::NewPolkadotTransactionParamsPtr params,
     AddUnapprovedPolkadotTransactionCallback callback) {
   auto chain_id = params->chain_id;
-  if (chain_id != GetNetworkForPolkadotAccount(params->from)) {
+  if (!polkadot_wallet_service_->IsPolkadotChain(chain_id)) {
     return std::move(callback).Run(false, "", WalletInternalErrorMessage());
   }
-
   polkadot_wallet_service_->GetChainMetadata(
       chain_id,
       base::BindOnce(&PolkadotTxManager::OnGetChainMetadataForUnapproved,

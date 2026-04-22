@@ -6,6 +6,8 @@
 #ifndef BRAVE_COMPONENTS_BRAVE_WALLET_BROWSER_POLKADOT_POLKADOT_WALLET_SERVICE_H_
 #define BRAVE_COMPONENTS_BRAVE_WALLET_BROWSER_POLKADOT_POLKADOT_WALLET_SERVICE_H_
 
+#include <array>
+
 #include "base/types/expected.h"
 #include "brave/components/brave_wallet/browser/keyring_service_observer_base.h"
 #include "brave/components/brave_wallet/browser/polkadot/polkadot_chain_metadata.h"
@@ -100,6 +102,8 @@ class PolkadotWalletService : public mojom::PolkadotWalletService,
       base::span<const uint8_t, kPolkadotSubstrateAccountIdSize> recipient,
       SignAndSendTransactionCallback callback);
 
+  bool IsPolkadotChain(std::string_view chain_id);
+
   using GetFeeEstimateCallback =
       base::OnceCallback<void(base::expected<uint128_t, std::string>)>;
 
@@ -144,6 +148,10 @@ class PolkadotWalletService : public mojom::PolkadotWalletService,
 
   void OnEstimatedFee(GetFeeEstimateCallback callback,
                       base::expected<uint128_t, std::string> partial_fee);
+  void OnGetChainMetadataForAddress(
+      std::array<uint8_t, kPolkadotSubstrateAccountIdSize> pubkey,
+      GetAddressCallback callback,
+      base::expected<PolkadotChainMetadata, std::string> metadata);
 
   const raw_ref<KeyringService> keyring_service_;
   const raw_ref<NetworkManager> network_manager_;

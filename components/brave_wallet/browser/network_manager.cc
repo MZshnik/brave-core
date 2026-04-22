@@ -65,27 +65,35 @@ constexpr auto kEip1559ForKnownChains =
 
 constexpr auto kChainSubdomains =
     base::MakeFixedFlatMap<std::string_view, std::string_view>(
-        {{mojom::kMainnetChainId, "ethereum-mainnet"},
-         {mojom::kSepoliaChainId, "ethereum-sepolia"},
-         {mojom::kPolygonMainnetChainId, "polygon-mainnet"},
-         {mojom::kOptimismMainnetChainId, "optimism-mainnet"},
-         {mojom::kBaseMainnetChainId, "base-mainnet"},
-         {mojom::kAvalancheMainnetChainId, "avalanche-mainnet"},
-         {mojom::kBnbSmartChainMainnetChainId, "bsc-mainnet"},
+        {
+            {mojom::kMainnetChainId, "ethereum-mainnet"},
+            {mojom::kSepoliaChainId, "ethereum-sepolia"},
+            {mojom::kPolygonMainnetChainId, "polygon-mainnet"},
+            {mojom::kOptimismMainnetChainId, "optimism-mainnet"},
+            {mojom::kBaseMainnetChainId, "base-mainnet"},
+            {mojom::kAvalancheMainnetChainId, "avalanche-mainnet"},
+            {mojom::kBnbSmartChainMainnetChainId, "bsc-mainnet"},
 
-         // SVM chains.
-         {mojom::kSolanaMainnet, "solana-mainnet"},
+            // SVM chains.
+            {mojom::kSolanaMainnet, "solana-mainnet"},
 
-         // Bitcoin chains.
-         {mojom::kBitcoinMainnet, "bitcoin-mainnet"},
+            // Bitcoin chains.
+            {mojom::kBitcoinMainnet, "bitcoin-mainnet"},
 
-         // Cardano chains.
-         {mojom::kCardanoMainnet, "cardano-mainnet"},
-         {mojom::kCardanoTestnet, "cardano-preprod"},
+            // Cardano chains.
+            {mojom::kCardanoMainnet, "cardano-mainnet"},
+            {mojom::kCardanoTestnet, "cardano-preprod"},
 
-         // Polkadot chains.
-         {mojom::kPolkadotMainnet, "polkadot-mainnet"},
-         {mojom::kPolkadotTestnet, "polkadot-westend"}},
+            // Polkadot mainnet chains.
+            {mojom::kPolkadotMainnet, "polkadot-mainnet"},
+            {mojom::kAcalaMainnet, "acala-mainnet"},
+            {mojom::kMoonbeamMainnet, "moonbeam-mainnet"},
+            {mojom::kBifrostMainnet, "bifrost-mainnet"},
+            // Polkadot testnet chains.
+            {mojom::kPolkadotTestnet, "polkadot-westend"},
+            {mojom::kAssetsHubTestnet, "assets-hub-testnet"},
+            {mojom::kCollectivesTestnet, "collectives-testnet"},
+        },
         CaseInsensitiveCompare());
 
 constexpr char kGanacheLocalhostURL[] = "http://localhost:7545/";
@@ -174,7 +182,7 @@ const mojom::NetworkInfo* GetEthMainnet() {
        "Ethereum",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -193,7 +201,7 @@ const mojom::NetworkInfo* GetPolygonMainnet() {
        "MATIC",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -212,7 +220,7 @@ const mojom::NetworkInfo* GetBscMainnet() {
        "BNB",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -231,7 +239,7 @@ const mojom::NetworkInfo* GetAvalancheMainnet() {
        "Avalanche",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -250,7 +258,7 @@ const mojom::NetworkInfo* GetOptimismMainnet() {
        "Ether",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -269,7 +277,7 @@ const mojom::NetworkInfo* GetBaseMainnet() {
        "Ether",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -288,7 +296,7 @@ const mojom::NetworkInfo* GetNeonEVMMainnet() {
        "Neon",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -307,7 +315,7 @@ const mojom::NetworkInfo* GetSepoliaTestNetwork() {
        "Ethereum",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -326,7 +334,7 @@ const mojom::NetworkInfo* GetEthLocalhost() {
        "Ethereum",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -345,7 +353,7 @@ const mojom::NetworkInfo* GetFilecoinEthereumMainnet() {
        "Filecoin",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -364,7 +372,7 @@ const mojom::NetworkInfo* GetFilecoinEthereumTestnet() {
        "Filecoin",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -403,7 +411,7 @@ const mojom::NetworkInfo* GetSolMainnet() {
        "Solana",
        9,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -422,7 +430,7 @@ const mojom::NetworkInfo* GetSolTestnet() {
        "Solana",
        9,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -441,7 +449,7 @@ const mojom::NetworkInfo* GetSolDevnet() {
        "Solana",
        9,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -461,7 +469,7 @@ const mojom::NetworkInfo* GetSolLocalhost() {
        "Solana",
        9,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -492,7 +500,7 @@ const mojom::NetworkInfo* GetFilMainnet() {
        "Filecoin",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -511,7 +519,7 @@ const mojom::NetworkInfo* GetFilTestnet() {
        "Filecoin",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -530,7 +538,7 @@ const mojom::NetworkInfo* GetFilLocalhost() {
        "Filecoin",
        18,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -605,6 +613,56 @@ GURL PolkadotTestnetRpcUrl() {
   return GetURLForKnownChainId(mojom::kPolkadotTestnet).value();
 }
 
+GURL AcalaMainnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kAcalaMainnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GetURLForKnownChainId(mojom::kAcalaMainnet).value();
+}
+
+GURL MoonbeamMainnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kMoonbeamMainnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GetURLForKnownChainId(mojom::kMoonbeamMainnet).value();
+}
+
+GURL BifrostMainnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kBifrostMainnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GetURLForKnownChainId(mojom::kBifrostMainnet).value();
+}
+
+GURL AssetHubTestnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kAssetsHubTestnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GetURLForKnownChainId(mojom::kAssetsHubTestnet).value();
+}
+
+GURL CollectivesTestnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kCollectivesTestnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GetURLForKnownChainId(mojom::kCollectivesTestnet).value();
+}
+
 const mojom::NetworkInfo* GetBitcoinMainnet() {
   const auto coin = mojom::CoinType::BTC;
   const auto* chain_id = mojom::kBitcoinMainnet;
@@ -620,7 +678,7 @@ const mojom::NetworkInfo* GetBitcoinMainnet() {
        "Bitcoin",
        8,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -639,7 +697,7 @@ const mojom::NetworkInfo* GetBitcoinTestnet() {
        "Bitcoin",
        8,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -658,7 +716,7 @@ const mojom::NetworkInfo* GetZCashMainnet() {
        "Zcash",
        8,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -677,7 +735,7 @@ const mojom::NetworkInfo* GetZCashTestnet() {
        "Zcash",
        8,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -696,7 +754,7 @@ const mojom::NetworkInfo* GetCardanoMainnet() {
        "Cardano",
        6,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -715,7 +773,7 @@ const mojom::NetworkInfo* GetCardanoTestnet() {
        "Cardano",
        6,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -734,7 +792,63 @@ const mojom::NetworkInfo* GetPolkadotMainnet() {
        "Polkadot",
        10,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
+  return network_info.get();
+}
+
+const mojom::NetworkInfo* GetAcalaMainnet() {
+  const auto coin = mojom::CoinType::DOT;
+  const auto* chain_id = mojom::kAcalaMainnet;
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Acala",
+       {"https://acala.subscan.io/"},
+       {},
+       0,
+       {AcalaMainnetRpcUrl()},
+       "ACA",
+       "Acala",
+       12,
+       coin,
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
+  return network_info.get();
+}
+
+const mojom::NetworkInfo* GetMoonbeamMainnet() {
+  const auto coin = mojom::CoinType::DOT;
+  const auto* chain_id = mojom::kMoonbeamMainnet;
+  // Moonbeam is a chain ID; it uses the Polkadot mainnet keyring.
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Moonbeam",
+       {"https://moonscan.io/"},
+       {},
+       0,
+       {MoonbeamMainnetRpcUrl()},
+       "GLMR",
+       "Moonbeam",
+       18,
+       coin,
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
+  return network_info.get();
+}
+
+const mojom::NetworkInfo* GetBifrostMainnet() {
+  const auto coin = mojom::CoinType::DOT;
+  const auto* chain_id = mojom::kBifrostMainnet;
+  // Bifrost is a chain ID; it uses the Polkadot mainnet keyring.
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Bifrost",
+       {"https://bifrost.subscan.io/"},
+       {},
+       0,
+       {BifrostMainnetRpcUrl()},
+       "BNC",
+       "Bifrost",
+       12,
+       coin,
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -753,7 +867,43 @@ const mojom::NetworkInfo* GetPolkadotTestnet() {
        "Polkadot",
        12,
        coin,
-       GetSupportedKeyringsForNetwork(coin, chain_id)});
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
+  return network_info.get();
+}
+
+const mojom::NetworkInfo* GetAssetsHubTestnet() {
+  const auto coin = mojom::CoinType::DOT;
+  const auto* chain_id = mojom::kAssetsHubTestnet;
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Assets Hub Testnet",
+       {"https://assets-hub.subscan.io/"},
+       {},
+       0,
+       {AssetHubTestnetRpcUrl()},
+       "AUSD",
+       "Assets Hub",
+       12,
+       coin,
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
+  return network_info.get();
+}
+
+const mojom::NetworkInfo* GetCollectivesTestnet() {
+  const auto coin = mojom::CoinType::DOT;
+  const auto* chain_id = mojom::kCollectivesTestnet;
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Collectives Testnet",
+       {"https://collectives.subscan.io/"},
+       {},
+       0,
+       {CollectivesTestnetRpcUrl()},
+       "COL",
+       "Collectives",
+       12,
+       coin,
+       GetSupportedKeyringsForKnownNetwork(coin, chain_id)});
   return network_info.get();
 }
 
@@ -791,7 +941,12 @@ const std::vector<const mojom::NetworkInfo*>& GetKnownPolkadotNetworks() {
   static base::NoDestructor<std::vector<const mojom::NetworkInfo*>> networks({
       // clang-format off
       GetPolkadotMainnet(),
+      GetAcalaMainnet(),
+      GetMoonbeamMainnet(),
+      GetBifrostMainnet(),
       GetPolkadotTestnet(),
+      GetAssetsHubTestnet(),
+      GetCollectivesTestnet(),
       // clang-format on
   });
   return *networks.get();

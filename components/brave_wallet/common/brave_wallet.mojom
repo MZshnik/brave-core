@@ -917,6 +917,7 @@ struct SwapFees {
   SwapDiscountCode discount_code;
 };
 
+// KeyringId could be persisted, so do not change values of existing keyrings.
 enum KeyringId {
   kDefault = 0,
   kSolana = 1,
@@ -1548,10 +1549,23 @@ const string kZCashMainnet = "zcash_mainnet";
 
 const string kZCashTestnet = "zcash_testnet";
 
+// Hardcoded Polkadot mainnet parachains.
 const string kPolkadotMainnet = "polkadot_mainnet";
 
+const string kAcalaMainnet = "acala_mainnet";
+
+const string kMoonbeamMainnet = "moonbeam_mainnet";
+
+const string kBifrostMainnet = "bifrost_mainnet";
+
+// Hardcoded Polkadot testnet parachains.
 const string kPolkadotTestnet = "polkadot_testnet";
 
+const string kAssetsHubTestnet = "assets_hub_testnet";
+
+const string kCollectivesTestnet = "collectives_testnet";
+
+// End of polkadot chains.
 const string kArbitrumNovaChainId = "0xa4ba";
 
 const string kGnosisChainId = "0x64";

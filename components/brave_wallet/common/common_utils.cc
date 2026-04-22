@@ -14,6 +14,7 @@
 #include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
+#include "brave/components/brave_wallet/common/brave_wallet.mojom-forward.h"
 #include "brave/components/brave_wallet/common/buildflags/buildflags.h"
 #include "brave/components/brave_wallet/common/features.h"
 #include "brave/net/base/url_util.h"
@@ -291,7 +292,7 @@ bool IsPolkadotImportKeyring(mojom::KeyringId keyring_id) {
          keyring_id == mojom::KeyringId::kPolkadotImportTestnet;
 }
 
-bool IsPolkadotNetwork(std::string_view network_id) {
+bool IsPolkadotRelayNetwork(std::string_view network_id) {
   return network_id == mojom::kPolkadotMainnet ||
          network_id == mojom::kPolkadotTestnet;
 }
@@ -473,7 +474,7 @@ bool IsFixedSelectedNetworkCoin(mojom::CoinType coin) {
   return coin == mojom::CoinType::BTC || coin == mojom::CoinType::ADA;
 }
 
-std::vector<mojom::KeyringId> GetSupportedKeyringsForNetwork(
+std::vector<mojom::KeyringId> GetSupportedKeyringsForKnownNetwork(
     mojom::CoinType coin,
     const std::string& chain_id) {
   switch (coin) {
@@ -510,7 +511,10 @@ std::vector<mojom::KeyringId> GetSupportedKeyringsForNetwork(
         return {mojom::KeyringId::kCardanoTestnet};
       }
     case mojom::CoinType::DOT:
-      if (chain_id == mojom::kPolkadotMainnet) {
+      if (chain_id == mojom::kPolkadotMainnet ||
+          chain_id == mojom::kAcalaMainnet ||
+          chain_id == mojom::kMoonbeamMainnet ||
+          chain_id == mojom::kBifrostMainnet) {
         return {mojom::KeyringId::kPolkadotMainnet,
                 mojom::KeyringId::kPolkadotImport};
       }

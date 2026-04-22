@@ -449,6 +449,7 @@ void BraveWalletP3A::OnTransactionStatusChanged(
     if (tx_type != mojom::TransactionType::Other) {
       return;
     }
+    // TODO(cypt4): Validate by keyring id instead of chain id.
     if (!count_test_networks && chain_id == mojom::kPolkadotTestnet) {
       return;
     }

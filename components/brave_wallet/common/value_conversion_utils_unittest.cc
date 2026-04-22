@@ -185,6 +185,28 @@ TEST(ValueConversionUtilsUnitTest, ValueToNetworkInfoTest) {
   }
 
   {
+    auto value = base::test::ParseJson(R"({
+      "chainId": "polkadot-mainnet"
+    })");
+    value.GetDict().Set("coin", static_cast<int>(mojom::CoinType::DOT));
+
+    base::ListValue supported_keyrings;
+    supported_keyrings.Append(
+        static_cast<int>(mojom::KeyringId::kPolkadotMainnet));
+    supported_keyrings.Append(
+        static_cast<int>(mojom::KeyringId::kPolkadotImport));
+    supported_keyrings.Append("unexpected_non_int_entry");
+    value.GetDict().Set("supportedKeyrings", std::move(supported_keyrings));
+
+    mojom::NetworkInfoPtr chain = ValueToNetworkInfo(value);
+    ASSERT_TRUE(chain);
+    EXPECT_EQ(chain->coin, mojom::CoinType::DOT);
+    EXPECT_THAT(chain->supported_keyrings,
+                ElementsAreArray({mojom::KeyringId::kPolkadotMainnet,
+                                  mojom::KeyringId::kPolkadotImport}));
+  }
+
+  {
     mojom::NetworkInfoPtr chain =
         ValueToNetworkInfo(base::test::ParseJson(R"({})"));
     ASSERT_FALSE(chain);
@@ -194,6 +216,23 @@ TEST(ValueConversionUtilsUnitTest, ValueToNetworkInfoTest) {
         ValueToNetworkInfo(base::test::ParseJson(R"([])"));
     ASSERT_FALSE(chain);
   }
+}
+
+TEST(ValueConversionUtilsUnitTest,
+     ValueToNetworkInfoTest_SupportedKeyringMigration) {
+  auto value = base::test::ParseJson(R"({
+    "chainId": "bitcoin_mainnet",
+    "coin": 0
+  })");
+
+  value.GetDict().Remove("supportedKeyrings");
+
+  mojom::NetworkInfoPtr chain = ValueToNetworkInfo(value);
+  ASSERT_TRUE(chain);
+  EXPECT_EQ(chain->coin, mojom::CoinType::BTC);
+  EXPECT_THAT(chain->supported_keyrings,
+              ElementsAreArray(GetSupportedKeyringsForKnownNetwork(
+                  mojom::CoinType::BTC, mojom::kBitcoinMainnet)));
 }
 
 TEST(ValueConversionUtilsUnitTest, NetworkInfoToValueTest) {
@@ -282,6 +321,7 @@ TEST(ValueConversionUtilsUnitTest, NetworkInfoToValueTest) {
                 ElementsAreArray({mojom::KeyringId::kCardanoTestnet}));
 
     data_value.GetDict().Set("coin", static_cast<int>(mojom::CoinType::DOT));
+    data_value.GetDict().Set("chainId", mojom::kPolkadotTestnet);
     value_network = ValueToNetworkInfo(data_value);
     EXPECT_EQ(value_network->coin, mojom::CoinType::DOT);
     EXPECT_THAT(value_network->supported_keyrings,

@@ -375,8 +375,11 @@ TEST_F(PolkadotWalletServiceUnitTest, GetCompatibleNetworks) {
 
     auto networks = future.Take();
     ASSERT_TRUE(networks.has_value());
-    EXPECT_EQ(networks->size(), 1u);
+    EXPECT_EQ(networks->size(), 4u);
     EXPECT_EQ(networks->at(0)->chain_id, mojom::kPolkadotMainnet);
+    EXPECT_EQ(networks->at(1)->chain_id, mojom::kAcalaMainnet);
+    EXPECT_EQ(networks->at(2)->chain_id, mojom::kMoonbeamMainnet);
+    EXPECT_EQ(networks->at(3)->chain_id, mojom::kBifrostMainnet);
     EXPECT_EQ(networks->at(0)->coin, mojom::CoinType::DOT);
   }
 
@@ -392,7 +395,10 @@ TEST_F(PolkadotWalletServiceUnitTest, GetCompatibleNetworks) {
 
     auto networks = future.Take();
     ASSERT_TRUE(networks.has_value());
-    EXPECT_TRUE(networks->empty());
+    EXPECT_EQ(networks->size(), 3u);
+    EXPECT_EQ(networks->at(0)->chain_id, mojom::kAcalaMainnet);
+    EXPECT_EQ(networks->at(1)->chain_id, mojom::kMoonbeamMainnet);
+    EXPECT_EQ(networks->at(2)->chain_id, mojom::kBifrostMainnet);
   }
 
   // Compatible networks for testnet account.
@@ -414,6 +420,18 @@ TEST_F(PolkadotWalletServiceUnitTest, GetAddress) {
   auto polkadot_wallet_service = std::make_unique<PolkadotWalletService>(
       *keyring_service_, *network_manager_, prefs_,
       url_loader_factory_.GetSafeWeakWrapper());
+
+  std::string testnet_url =
+      network_manager_
+          ->GetKnownChain(mojom::kPolkadotTestnet, mojom::CoinType::DOT)
+          ->rpc_endpoints.front()
+          .spec();
+  std::string mainnet_url =
+      network_manager_
+          ->GetKnownChain(mojom::kPolkadotMainnet, mojom::CoinType::DOT)
+          ->rpc_endpoints.front()
+          .spec();
+  AddValidMetadataResponses(url_loader_factory_, testnet_url, mainnet_url);
 
   // Mainnet address.
   {

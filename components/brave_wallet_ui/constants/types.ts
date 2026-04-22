@@ -703,6 +703,8 @@ export const SupportedTestNetworks = [
   BraveWallet.Z_CASH_TESTNET,
   BraveWallet.CARDANO_TESTNET,
   BraveWallet.POLKADOT_TESTNET,
+  BraveWallet.ASSETS_HUB_TESTNET,
+  BraveWallet.COLLECTIVES_TESTNET,
 ]
 
 export const SupportedTestNetworkEntityIds: EntityId[] = [
@@ -757,6 +759,7 @@ export const CardanoTestnetKeyringIds = [BraveWallet.KeyringId.kCardanoTestnet]
 
 export const PolkadotTestnetKeyringIds = [
   BraveWallet.KeyringId.kPolkadotTestnet,
+  BraveWallet.KeyringId.kPolkadotImportTestnet,
 ]
 
 /**
