@@ -14,6 +14,7 @@
 #include "brave/components/containers/core/browser/containers_service_observer.h"
 #include "brave/components/containers/core/browser/pref_names.h"
 #include "brave/components/containers/core/browser/prefs.h"
+#include "brave/components/containers/core/browser/temporary_container.h"
 #include "brave/components/containers/core/browser/unknown_container.h"
 #include "brave/components/containers/core/mojom/containers.mojom.h"
 
@@ -64,6 +65,12 @@ void ContainersService::MarkContainerUsed(std::string_view container_id) {
   SetLocallyUsedContainerToPrefs(container, *prefs_);
 }
 
+mojom::ContainerPtr ContainersService::CreateAndPersistTemporaryContainer() {
+  auto container = CreateTemporaryContainer();
+  SetLocallyUsedContainerToPrefs(container, *prefs_);
+  return container;
+}
+
 mojom::ContainerPtr ContainersService::GetRuntimeContainerById(
     std::string_view id) const {
   if (auto container = GetContainerFromPrefs(*prefs_, id)) {
@@ -77,6 +84,18 @@ mojom::ContainerPtr ContainersService::GetRuntimeContainerById(
 
 std::vector<mojom::ContainerPtr> ContainersService::GetContainers() const {
   return GetContainersFromPrefs(*prefs_);
+}
+
+std::vector<mojom::ContainerPtr> ContainersService::GetContainersForMenu()
+    const {
+  std::vector<mojom::ContainerPtr> result = GetContainersFromPrefs(*prefs_);
+  for (auto& local : GetLocallyUsedContainersFromPrefs(*prefs_)) {
+    if (!IsTemporaryContainerId(local->id)) {
+      continue;
+    }
+    result.push_back(std::move(local));
+  }
+  return result;
 }
 
 void ContainersService::ScheduleOrphanedContainersCleanupForTesting() {

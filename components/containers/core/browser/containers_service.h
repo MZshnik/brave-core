@@ -62,6 +62,9 @@ class ContainersService : public KeyedService {
   // the synced list, otherwise a placeholder from `CreateUnknownContainer`.
   void MarkContainerUsed(std::string_view container_id);
 
+  // Creates a temporary container and persists it locally as a locally used.
+  mojom::ContainerPtr CreateAndPersistTemporaryContainer();
+
   // Returns the runtime container with the given `id`. Runtime containers are
   // containers that are currently in use by the user. This can be a synced
   // container or a removed, but still used container.
@@ -69,6 +72,10 @@ class ContainersService : public KeyedService {
 
   // Returns the list of user-editable containers.
   std::vector<mojom::ContainerPtr> GetContainers() const;
+
+  // Containers shown in "open in container" menus: synced list plus local-only
+  // temporary containers.
+  std::vector<mojom::ContainerPtr> GetContainersForMenu() const;
 
   void ScheduleOrphanedContainersCleanupForTesting();
 

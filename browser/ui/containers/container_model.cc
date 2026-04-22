@@ -50,7 +50,7 @@ ContainerModel::~ContainerModel() = default;
 std::vector<ContainerModel> GetContainerModels(const ContainersService& service,
                                                float scale_factor) {
   std::vector<ContainerModel> containers;
-  for (auto& container : service.GetContainers()) {
+  for (auto& container : service.GetContainersForMenu()) {
     containers.emplace_back(std::move(container), scale_factor);
   }
   return containers;

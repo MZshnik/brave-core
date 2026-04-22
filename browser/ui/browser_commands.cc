@@ -128,10 +128,11 @@
 #endif
 
 #if BUILDFLAG(ENABLE_CONTAINERS)
+#include "brave/browser/containers/containers_service_factory.h"
 #include "brave/browser/ui/tabs/public/brave_tab_features.h"
 #include "brave/browser/ui/views/page_action/partitioned_storage_page_action_controller.h"
 #include "brave/components/containers/content/browser/storage_partition_utils.h"
-#include "brave/components/containers/core/mojom/containers.mojom.h"
+#include "brave/components/containers/core/browser/containers_service.h"
 #include "components/tabs/public/tab_interface.h"
 #if defined(TOOLKIT_VIEWS)
 #include "chrome/browser/ui/views/frame/browser_view.h"
@@ -1169,17 +1170,19 @@ void ForcePasteInWebContents(content::WebContents* web_contents) {
 }
 
 #if BUILDFLAG(ENABLE_CONTAINERS)
-void OpenTabUrlInContainer(BrowserWindowInterface* browser_window,
-                           const tabs::TabHandle& tab,
-                           const containers::mojom::ContainerPtr& container) {
-  const auto* tab_ptr = tab.Get();
-  if (!tab_ptr) {
-    LOG(ERROR) << "Tab is not valid";
-    return;
-  }
+void OpenTabUrlsInContainer(BrowserWindowInterface* browser_window,
+                            const std::vector<tabs::TabHandle>& tabs,
+                            const containers::mojom::ContainerPtr& container) {
+  for (const auto& tab : tabs) {
+    const auto* tab_ptr = tab.Get();
+    if (!tab_ptr) {
+      LOG(ERROR) << "Tab is not valid";
+      continue;
+    }
 
-  const GURL& url = tab_ptr->GetContents()->GetLastCommittedURL();
-  OpenUrlInContainer(browser_window, url, container);
+    const GURL& url = tab_ptr->GetContents()->GetLastCommittedURL();
+    OpenUrlInContainer(browser_window, url, container);
+  }
 }
 
 void OpenUrlInContainer(BrowserWindowInterface* browser_window,
@@ -1202,16 +1205,18 @@ void OpenUrlInContainer(BrowserWindowInterface* browser_window,
   Navigate(&params);
 }
 
-void OpenTabUrlWithoutContainer(BrowserWindowInterface* browser_window,
-                                const tabs::TabHandle& tab) {
-  const auto* tab_ptr = tab.Get();
-  if (!tab_ptr) {
-    LOG(ERROR) << "Tab is not valid";
-    return;
-  }
+void OpenTabUrlsWithoutContainer(BrowserWindowInterface* browser_window,
+                                 const std::vector<tabs::TabHandle>& tabs) {
+  for (const auto& tab : tabs) {
+    const auto* tab_ptr = tab.Get();
+    if (!tab_ptr) {
+      LOG(ERROR) << "Tab is not valid";
+      continue;
+    }
 
-  const GURL& url = tab_ptr->GetContents()->GetLastCommittedURL();
-  OpenUrlWithoutContainer(browser_window, url);
+    const GURL& url = tab_ptr->GetContents()->GetLastCommittedURL();
+    OpenUrlWithoutContainer(browser_window, url);
+  }
 }
 
 void OpenUrlWithoutContainer(BrowserWindowInterface* browser_window,
@@ -1224,6 +1229,31 @@ void OpenUrlWithoutContainer(BrowserWindowInterface* browser_window,
   NavigateParams params(browser_window, url, ui::PAGE_TRANSITION_LINK);
   params.disposition = WindowOpenDisposition::NEW_FOREGROUND_TAB;
   Navigate(&params);
+}
+
+void CreateTemporaryContainerAndOpenTabUrls(
+    BrowserWindowInterface* browser_window,
+    const std::vector<tabs::TabHandle>& tabs) {
+  auto* containers_service =
+      ContainersServiceFactory::GetForProfile(browser_window->GetProfile());
+  CHECK(containers_service);
+  auto container = containers_service->CreateAndPersistTemporaryContainer();
+  OpenTabUrlsInContainer(browser_window, tabs, container);
+}
+
+void CreateTemporaryContainerAndOpenUrl(BrowserWindowInterface* browser_window,
+                                        const GURL& url) {
+  CHECK(browser_window);
+  if (!url.is_valid()) {
+    LOG(ERROR) << "Url is not valid";
+    return;
+  }
+
+  auto* containers_service =
+      ContainersServiceFactory::GetForProfile(browser_window->GetProfile());
+  CHECK(containers_service);
+  auto container = containers_service->CreateAndPersistTemporaryContainer();
+  OpenUrlInContainer(browser_window, url, std::move(container));
 }
 
 void OpenContainerMenuOnPageActionView(BrowserWindowInterface* browser_window,
