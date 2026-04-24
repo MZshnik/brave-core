@@ -327,6 +327,33 @@ TEST_F(BravePassageEmbeddingsServiceTest,
   EXPECT_TRUE(load->load_success.Get());
 }
 
+TEST_F(BravePassageEmbeddingsServiceTest, BindAgainAfterEmbedderRemoteReset) {
+  auto load = IssueLoad();
+  SetUpModelFiles();
+  RegisterFactory();
+  ASSERT_TRUE(load->load_success.Get());
+  ASSERT_EQ(1u, web_contents_create_count_);
+
+  // Drop the caller-side embedder remote. The BatchEmbedder's receiver
+  // disconnects, on_disconnect fires up to the service, and
+  // CloseBackgroundContents tears down the contents.
+  load->embedder.reset();
+  ASSERT_TRUE(base::test::RunUntil(
+      [&] { return last_created_web_contents_ == nullptr; }));
+
+  // The factory pipe was reset along with the service state; the fake
+  // still holds a now-disconnected receiver, so reset it before
+  // re-binding for the next cycle.
+  fake_factory_.ResetReceiver();
+
+  auto load2 = IssueLoad();
+  EXPECT_EQ(2u, web_contents_create_count_);
+  RegisterFactory();
+  ASSERT_TRUE(
+      base::test::RunUntil([&] { return fake_factory_.init_count() > 1; }));
+  EXPECT_TRUE(load2->load_success.Get());
+}
+
 TEST_F(BravePassageEmbeddingsServiceTest, BindRegistryRoutesToService) {
   // Manually exercise the static registry: install a bind callback for
   // a fake WebContents pointer, call BindForWebContents, and confirm
