@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol BraveTalkTabHelperBridge;
 @protocol BraveSearchMakeDefaultTabHelperBridge;
 @protocol PrintHandler;
+@protocol RequestBlockingDelegate;
 
 typedef void (^ResetConfigurationCallback)(id<ProfileBridge>,
                                            WKWebViewConfiguration*);
@@ -231,6 +232,12 @@ CWV_EXPORT
 @interface BraveWebView (Print)
 /// A bridge for handling window.print script messages
 - (void)setPrintHandler:(id<PrintHandler>)printHandler;
+@end
+
+CWV_EXPORT
+@interface BraveWebView (RequestBlocking)
+/// A delegate for Request Blocking javascript feature
+- (void)setRequestBlockingDelegate:(id<RequestBlockingDelegate>)delegate;
 @end
 
 NS_ASSUME_NONNULL_END

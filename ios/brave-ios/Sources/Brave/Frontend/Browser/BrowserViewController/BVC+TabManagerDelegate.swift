@@ -88,6 +88,7 @@ extension BrowserViewController: TabManagerDelegate {
     // When `BraveShieldsTabHelper+TabPolicyDecider` is moved to `BraveShields` target,
     // we should add it as a policy decider at initialization.
     tab.addPolicyDecider(braveShieldsHelper)
+    tab.requestBlockingTabHelper = .init(tab: tab)
     tab.logins = .init(tab: tab, passwordAPI: profileController.passwordAPI)
     tab.nightMode = .init(tab: tab)
 

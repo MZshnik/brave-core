@@ -20,6 +20,7 @@
 #include "ios/web/public/navigation/navigation_item.h"
 #include "ios/web/public/navigation/navigation_manager.h"
 #include "ios/web/public/web_state.h"
+#include "net/base/apple/url_conversions.h"
 #include "url/gurl.h"
 
 namespace {
@@ -96,7 +97,26 @@ void RequestBlockingJavaScriptFeature::ScriptMessageReceivedWithReply(
     return;
   }
 
-  // TODO: ask adblock engine if we should block
-  std::move(reply_handler).Run(false);
+  // TODO: Add other checks from RequestBlockingContentScriptHandler
+
+  if ([delegate_ respondsToSelector:@selector
+                 (shouldBlockRequestURL:sourceURL:resourceType:adblockMode:)]) {
+    auto should_block = [delegate_
+        shouldBlockRequestURL:net::NSURLWithGURL(resource_url)
+                    sourceURL:net::NSURLWithGURL(resource_url)
+                 resourceType:[NSString
+                                  stringWithUTF8String:resource_type_string
+                                                           ->c_str()]
+                  adblockMode:BraveShieldsAdBlockModeStandard];
+    std::move(reply_handler).Run(should_block);
+  } else {
+    std::move(reply_handler).Run(false);
+  }
+
   return;
+}
+
+void RequestBlockingJavaScriptFeature::SetDelegate(
+    id<RequestBlockingDelegate> delegate) {
+  delegate_ = delegate;
 }

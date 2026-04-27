@@ -7,6 +7,7 @@
 #define BRAVE_IOS_BROWSER_BRAVE_SHIELDS_REQUEST_BLOCKING_REQUEST_BLOCKING_JAVASCRIPT_FEATURE_H_
 
 #include "base/no_destructor.h"
+#include "brave/ios/browser/brave_shields/request_blocking/request_blocking_delegate.h"
 #include "ios/web/public/js_messaging/java_script_feature.h"
 
 class RequestBlockingJavaScriptFeature : public web::JavaScriptFeature {
@@ -23,11 +24,14 @@ class RequestBlockingJavaScriptFeature : public web::JavaScriptFeature {
       const web::ScriptMessage& message,
       ScriptMessageReplyCallback callback) override;
 
+  void SetDelegate(id<RequestBlockingDelegate> delegate);
+
  private:
   friend class base::NoDestructor<RequestBlockingJavaScriptFeature>;
 
   RequestBlockingJavaScriptFeature();
   ~RequestBlockingJavaScriptFeature() override;
+  __weak id<RequestBlockingDelegate> delegate_;
 };
 
 #endif  // BRAVE_IOS_BROWSER_BRAVE_SHIELDS_REQUEST_BLOCKING_REQUEST_BLOCKING_JAVASCRIPT_FEATURE_H_
