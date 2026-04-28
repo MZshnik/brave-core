@@ -16,7 +16,8 @@
 #include "content/public/browser/webui_config_map.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_WALLET)
-#include "brave/browser/ui/webui/brave_wallet/wallet_page_ui.h"
+#include "brave/browser/ui/webui/brave_wallet/wallet_page/wallet_page_ui.h"
+#include "brave/browser/ui/webui/brave_wallet/wallet_panel/wallet_panel_ui.h"
 #endif
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
@@ -40,9 +41,6 @@
 #include "brave/browser/ui/webui/private_new_tab_page/brave_private_new_tab_ui.h"
 #include "brave/browser/ui/webui/webcompat_reporter/webcompat_reporter_ui.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_WALLET)
-#include "brave/browser/ui/webui/brave_wallet/wallet_panel_ui.h"
-#endif
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/browser/ui/webui/speedreader/speedreader_toolbar_ui.h"
 #endif

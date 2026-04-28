@@ -290,18 +290,17 @@ using extensions::ChromeContentBrowserClientExtensionsPart;
 #endif
 
 #if BUILDFLAG(IS_ANDROID)
-#if BUILDFLAG(ENABLE_BRAVE_WALLET)
-#include "brave/browser/ui/webui/brave_wallet/android/android_wallet_page_ui.h"
-#endif  //  BUILDFLAG(ENABLE_BRAVE_WALLET)
 #include "brave/browser/ui/webui/new_tab_takeover/android/new_tab_takeover_ui.h"
 #endif  // BUILDFLAG(IS_ANDROID)
 
-#if !BUILDFLAG(IS_ANDROID)
 #if BUILDFLAG(ENABLE_BRAVE_WALLET)
-#include "brave/browser/ui/webui/brave_wallet/wallet_page_ui.h"
-#include "brave/browser/ui/webui/brave_wallet/wallet_panel_ui.h"
+#include "brave/browser/ui/webui/brave_wallet/wallet_page/wallet_page_ui.h"
+#if !BUILDFLAG(IS_ANDROID)
+#include "brave/browser/ui/webui/brave_wallet/wallet_panel/wallet_panel_ui.h"
+#endif  // !BUILDFLAG(IS_ANDROID)
 #endif  // BUILDFLAG(ENABLE_BRAVE_WALLET)
 
+#if !BUILDFLAG(IS_ANDROID)
 #if BUILDFLAG(ENABLE_BRAVE_NEWS)
 #include "brave/browser/ui/webui/brave_news_internals/brave_news_internals_ui.h"
 #include "brave/components/brave_news/common/brave_news.mojom.h"
@@ -703,22 +702,24 @@ void BraveContentBrowserClient::RegisterTrustedWebUIInterfaceBrokers(
       .Add<brave_rewards::mojom::RewardsPageHandler>();
 #endif
 
-#if !BUILDFLAG(IS_ANDROID)
 #if BUILDFLAG(ENABLE_BRAVE_WALLET)
   registry.ForWebUI<WalletPageUI>()
       .Add<brave_wallet::mojom::PageHandlerFactory>()
 #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
       .Add<brave_rewards::mojom::RewardsPageHandler>()
-#endif
+#endif  // BUILDFLAG(ENABLE_BRAVE_REWARDS)
       ;
+#if !BUILDFLAG(IS_ANDROID)
   registry.ForWebUI<WalletPanelUI>()
       .Add<brave_wallet::mojom::PanelHandlerFactory>()
 #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
       .Add<brave_rewards::mojom::RewardsPageHandler>()
-#endif
+#endif  // BUILDFLAG(ENABLE_BRAVE_REWARDS)
       ;
-#endif
+#endif  // !BUILDFLAG(IS_ANDROID)
+#endif  // BUILDFLAG(ENABLE_BRAVE_WALLET)
 
+#if !BUILDFLAG(IS_ANDROID)
   auto ntp_refresh_registration =
       registry.ForWebUI<BraveNewTabPageUI>()
           .Add<brave_new_tab_page_refresh::mojom::NewTabPageHandler>()

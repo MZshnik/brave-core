@@ -11,24 +11,53 @@
 #include <vector>
 
 #include "base/check.h"
+#include "base/check_deref.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/scoped_refptr.h"
 #include "brave/browser/brave_wallet/brave_wallet_context_utils.h"
 #include "brave/browser/ui/views/frame/brave_browser_view.h"
-#include "brave/browser/ui/webui/brave_wallet/wallet_common_ui.h"
-#include "brave/browser/ui/webui/brave_wallet/wallet_panel_ui.h"
+#include "brave/browser/ui/webui/brave_wallet/wallet_panel/wallet_panel_ui.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface_iterator.h"
 #include "chrome/browser/ui/views/bubble/webui_bubble_manager.h"
 #include "chrome/browser/ui/views/frame/top_container_view.h"
 #include "components/grit/brave_components_strings.h"
+#include "components/sessions/content/session_tab_helper.h"
 #include "content/public/browser/web_contents.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/widget/widget.h"
 #include "url/gurl.h"
+
+namespace {
+
+content::WebContents* GetWebContentsFromTabId(Browser** browser,
+                                              int32_t tab_id) {
+  content::WebContents* contents_found = nullptr;
+  GlobalBrowserCollection::GetInstance()->ForEach(
+      [&contents_found, &browser,
+       tab_id](BrowserWindowInterface* target_browser) {
+        TabStripModel* tab_strip_model = target_browser->GetTabStripModel();
+        for (int index = 0; index < tab_strip_model->count(); ++index) {
+          content::WebContents* contents =
+              tab_strip_model->GetWebContentsAt(index);
+          if (sessions::SessionTabHelper::IdForTab(contents).id() == tab_id) {
+            if (browser) {
+              *browser = target_browser->GetBrowserForMigrationOnly();
+            }
+            contents_found = contents;
+            return false;
+          }
+        }
+        return true;
+      });
+  return contents_found;
+}
+
+}  // namespace
 
 namespace brave_wallet {
 
@@ -155,7 +184,7 @@ class WalletWebUIBubbleManager : public WebUIBubbleManagerImpl<WalletPanelUI>,
     for (auto tab_id : contents_wrapper->popup_ids()) {
       Browser* popup_browser = nullptr;
       content::WebContents* popup_contents =
-          brave_wallet::GetWebContentsFromTabId(&popup_browser, tab_id);
+          GetWebContentsFromTabId(&popup_browser, tab_id);
       if (!popup_contents || !popup_browser) {
         continue;
       }
@@ -232,7 +261,9 @@ WalletBubbleManagerDelegateImpl::~WalletBubbleManagerDelegateImpl() {
 
 void WalletBubbleManagerDelegateImpl::ShowBubble() {
   // Suppress request if not from active web_contents.
-  if (GetActiveWebContents() != web_contents_) {
+  if (CHECK_DEREF(GetLastActiveBrowserWindowInterfaceWithAnyProfile())
+          .GetTabStripModel()
+          ->GetActiveWebContents() != web_contents_) {
     return;
   }
 

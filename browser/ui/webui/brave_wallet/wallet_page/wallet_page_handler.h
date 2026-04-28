@@ -1,10 +1,10 @@
-// Copyright (c) 2021 The Brave Authors. All rights reserved.
+// Copyright (c) 2026 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
-// you can obtain one at http://mozilla.org/MPL/2.0/.
+// You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#ifndef BRAVE_BROWSER_UI_WEBUI_BRAVE_WALLET_PAGE_HANDLER_WALLET_PAGE_HANDLER_H_
-#define BRAVE_BROWSER_UI_WEBUI_BRAVE_WALLET_PAGE_HANDLER_WALLET_PAGE_HANDLER_H_
+#ifndef BRAVE_BROWSER_UI_WEBUI_BRAVE_WALLET_WALLET_PAGE_WALLET_PAGE_HANDLER_H_
+#define BRAVE_BROWSER_UI_WEBUI_BRAVE_WALLET_WALLET_PAGE_WALLET_PAGE_HANDLER_H_
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
@@ -37,4 +37,4 @@ class WalletPageHandler : public brave_wallet::mojom::PageHandler {
   base::WeakPtrFactory<WalletPageHandler> weak_ptr_factory_;
 };
 
-#endif  // BRAVE_BROWSER_UI_WEBUI_BRAVE_WALLET_PAGE_HANDLER_WALLET_PAGE_HANDLER_H_
+#endif  // BRAVE_BROWSER_UI_WEBUI_BRAVE_WALLET_WALLET_PAGE_WALLET_PAGE_HANDLER_H_
