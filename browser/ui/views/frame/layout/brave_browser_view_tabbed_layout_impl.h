@@ -57,6 +57,9 @@ class BraveBrowserViewTabbedLayoutImpl : public BrowserViewTabbedLayoutImpl {
   gfx::Rect CalculateTopContainerLayout(ProposedLayout& layout,
                                         BrowserLayoutParams params,
                                         bool needs_exclusion) const override;
+  void ConfigureTopContainerBackground(
+      const BrowserLayoutParams& params,
+      CustomCornersBackground* background) override;
   void DoPostLayoutVisualAdjustments(
       const BrowserLayoutParams& params) override;
   TopSeparatorType GetTopSeparatorType() const override;
@@ -69,6 +72,8 @@ class BraveBrowserViewTabbedLayoutImpl : public BrowserViewTabbedLayoutImpl {
                               const BrowserLayoutParams& params) const;
   void InsetContentsContainerBounds(ProposedLayout& layout) const;
 
+  bool IsFocusModeActive() const;
+  void AdjustLayoutForFocusMode(ProposedLayout& layout) const;
   void UpdateInsetsForVerticalTabStrip();
   void UpdateMarginsForSideBar();
 

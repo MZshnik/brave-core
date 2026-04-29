@@ -153,6 +153,8 @@ BraveBrowserViewTabbedLayoutImpl::CalculateProposedLayout(
         gfx::Insets().set_bottom(-views().webui_tab_strip->size().height()));
   }
 
+  AdjustLayoutForFocusMode(layout);
+
   // Handle sidebar and adjust contents container bounds. This should be done
   // BEFORE calling `InsetContentsContainerBounds()` so that the contents
   // container's final bounds is updated considering the sidebar's bounds.
@@ -241,6 +243,20 @@ gfx::Rect BraveBrowserViewTabbedLayoutImpl::CalculateTopContainerLayout(
   return bounds;
 }
 
+void BraveBrowserViewTabbedLayoutImpl::ConfigureTopContainerBackground(
+    const BrowserLayoutParams& params,
+    CustomCornersBackground* background) {
+  BrowserViewTabbedLayoutImpl::ConfigureTopContainerBackground(params,
+                                                               background);
+  // In focus mode, the horizontal tab strip is reparented into the top
+  // container. Since the tab strip does not paint its own background, the top
+  // container background must be set to the frame color instead of the toolbar
+  // background color.
+  if (IsFocusModeActive() && !delegate().ShouldShowVerticalTabs()) {
+    background->SetPrimaryColor(ui::kColorFrameActive);
+  }
+}
+
 void BraveBrowserViewTabbedLayoutImpl::DoPostLayoutVisualAdjustments(
     const BrowserLayoutParams& params) {
   BrowserViewTabbedLayoutImpl::DoPostLayoutVisualAdjustments(params);
@@ -318,6 +334,16 @@ void BraveBrowserViewTabbedLayoutImpl::CalculateBraveVerticalTabStripLayout(
   // Compute the top edge based on the proposed bounds of bookmark/infobar/top
   // container, not the current view bounds.
   auto get_vertical_tabs_top = [&]() -> int {
+    // In focus mode the top chrome slides over the contents area rather than
+    // pushing it down. Anchor the vertical tab strip to the top of the
+    // contents bounds so it stays full-height and the revealed top views
+    // overlay it.
+    if (IsFocusModeActive()) {
+      auto* contents_layout = layout.GetLayoutFor(views().contents_container);
+      CHECK(contents_layout);
+      return contents_layout->bounds.y();
+    }
+
     if (ShouldPushBookmarkBarForVerticalTabs()) {
       CHECK(views().bookmark_bar);
       auto* bookmark_layout = layout.GetLayoutFor(views().bookmark_bar);
@@ -459,6 +485,55 @@ void BraveBrowserViewTabbedLayoutImpl::CalculateSideBarLayout(
   // This is a Brave-specific view; upstream must not have populated it.
   CHECK(views().sidebar_container);
   layout.AddChild(views().sidebar_container, sidebar_bounds);
+}
+
+bool BraveBrowserViewTabbedLayoutImpl::IsFocusModeActive() const {
+  return delegate().IsFocusModeEnabled() && !delegate().IsFullscreen();
+}
+
+void BraveBrowserViewTabbedLayoutImpl::AdjustLayoutForFocusMode(
+    ProposedLayout& layout) const {
+  if (!IsFocusModeActive()) {
+    if (views().focus_mode_title_bar) {
+      layout.AddChild(views().focus_mode_title_bar, gfx::Rect());
+    }
+    return;
+  }
+
+  // While focus mode is on, the top container and horizontal tab strip have
+  // been reparented into a sibling overlay view managed by `BraveBrowserView`.
+  // The upstream layout's "top container parented elsewhere" branch already
+  // sizes those views in their parent (the overlay), so this method only has
+  // to position the focus-mode title bar, slide the infobar below it, and
+  // expand the contents container to start just below the title bar.
+
+  auto title_bar = views().focus_mode_title_bar;
+  if (!title_bar || !title_bar->GetVisible()) {
+    return;
+  }
+
+  auto* contents_layout = layout.GetLayoutFor(views().contents_container);
+  CHECK(contents_layout);
+
+  int content_top = title_bar->GetPreferredSize().height();
+  const gfx::Rect browser_bounds = views().browser_view->GetLocalBounds();
+  layout.AddChild(title_bar,
+                  gfx::Rect(0, 0, browser_bounds.width(), content_top));
+
+  if (delegate().IsInfobarVisible()) {
+    auto* infobar_layout = layout.GetLayoutFor(views().infobar_container);
+    CHECK(infobar_layout);
+    infobar_layout->bounds.set_y(content_top);
+    content_top += infobar_layout->bounds.height();
+  }
+
+  contents_layout->bounds.Outset(
+      gfx::Outsets::TLBR(contents_layout->bounds.y() - content_top, 0, 0, 0));
+
+  if (auto* background = layout.GetLayoutFor(views().contents_background)) {
+    background->bounds.Outset(
+        gfx::Outsets::TLBR(background->bounds.y(), 0, 0, 0));
+  }
 }
 
 void BraveBrowserViewTabbedLayoutImpl::InsetContentsContainerBounds(
@@ -628,7 +703,7 @@ bool BraveBrowserViewTabbedLayoutImpl::ShouldPushBookmarkBarForVerticalTabs()
   // we should lay out vertical tab strip next to bookmarks bar so that
   // the tab strip doesn't move when changing the active tab.
   return views().bookmark_bar && !delegate().IsBookmarkBarOnByPref() &&
-         delegate().IsBookmarkBarVisible();
+         delegate().IsBookmarkBarVisible() && !IsFocusModeActive();
 }
 
 gfx::Insets
