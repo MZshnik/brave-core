@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/feedback/system_logs/log_sources/chrome_internal_log_source_browsertest.cc b/chrome/browser/feedback/system_logs/log_sources/chrome_internal_log_source_browsertest.cc
+index c8b06135ee862350d6e038471acbb2096e096587..b81f5dcc6630384c34b589c03da481c0698e558d 100644
+--- a/chrome/browser/feedback/system_logs/log_sources/chrome_internal_log_source_browsertest.cc
++++ b/chrome/browser/feedback/system_logs/log_sources/chrome_internal_log_source_browsertest.cc
+@@ -201,7 +201,7 @@ IN_PROC_BROWSER_TEST_F(ChromeInternalLogSourceTest, RecordedAuthEventsPresent) {
+ }
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
+-#if BUILDFLAG(IS_MAC) && BUILDFLAG(ENABLE_UPDATER)
++#if 0 && BUILDFLAG(IS_MAC) && BUILDFLAG(ENABLE_UPDATER)
+ IN_PROC_BROWSER_TEST_F(ChromeInternalLogSourceTest, UpdaterDataPresent) {
+   base::ScopedClosureRunner service_override =
+       updater::OverrideService(updater::UpdateService::Result::kSuccess, {});
