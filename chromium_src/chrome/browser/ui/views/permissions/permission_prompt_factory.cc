@@ -9,8 +9,8 @@
 #include "components/permissions/request_type.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_WALLET)
-#include "chrome/browser/ui/browser_finder.h"
 #include "brave/browser/ui/views/permission_bubble/brave_wallet_permission_prompt_impl.h"
+#include "chrome/browser/ui/browser_finder.h"
 #endif
 
 #define CreatePermissionPrompt CreatePermissionPrompt_ChromiumImpl
