@@ -1,0 +1,12 @@
+diff --git a/components/policy/proto/device_management_backend.proto b/components/policy/proto/device_management_backend.proto
+index d3ff936300e6dc316c7320b29c63bd38dcf2294e..91d65abac1fe0c1fb7af8c2e43e698e51264138d 100644
+--- a/components/policy/proto/device_management_backend.proto
++++ b/components/policy/proto/device_management_backend.proto
+@@ -2312,6 +2312,7 @@ message CertificateDetails {
+     RSA_PKCS1_SHA256 = 2;
+     ECDSA_SHA256 = 3;
+     RSA_PSS_SHA256 = 4;
++    ECDSA_SHA384 = 5;
+   }
+ 
+   // The DER encoded enterprise certificate.

@@ -1,0 +1,17 @@
+# Copyright (c) 2026 The Brave Authors. All rights reserved.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at https://mozilla.org/MPL/2.0/.
+
+[[substitution]]
+description = '''Add support for `ECDSA_SHA384` to `SignatureAlgorithm` enum.`
+
+It is necessary to add `ECDSA_SHA384` to any types that get passed as a
+signature algorithm. The negative lookahead guards against collisions if
+upstream adds a value with `= 5;` before we do.
+'''
+re_pattern = '(enum SignatureAlgorithm\s*\{(?![^}]*=\s*5;).*?RSA_PSS_SHA256\s*=\s*4;)(\s*\})'
+re_flags = ['DOTALL']
+count = 1
+replace = '''\1
+    ECDSA_SHA384 = 5;\2'''
