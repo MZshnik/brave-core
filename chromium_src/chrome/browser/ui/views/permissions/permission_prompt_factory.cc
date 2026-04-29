@@ -9,6 +9,7 @@
 #include "components/permissions/request_type.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_WALLET)
+#include "chrome/browser/ui/browser_finder.h"
 #include "brave/browser/ui/views/permission_bubble/brave_wallet_permission_prompt_impl.h"
 #endif
 
@@ -19,6 +20,7 @@
 std::unique_ptr<permissions::PermissionPrompt> CreatePermissionPrompt(
     content::WebContents* web_contents,
     permissions::PermissionPrompt::Delegate* delegate) {
+#if BUILDFLAG(ENABLE_BRAVE_WALLET)
   Browser* browser = chrome::FindBrowserWithTab(web_contents);
   if (!browser) {
     DLOG(WARNING) << "Permission prompt suppressed because the WebContents is "
@@ -26,7 +28,6 @@ std::unique_ptr<permissions::PermissionPrompt> CreatePermissionPrompt(
     return nullptr;
   }
 
-#if BUILDFLAG(ENABLE_BRAVE_WALLET)
   if (delegate->Requests()[0]->request_type() ==
           permissions::RequestType::kBraveEthereum ||
       delegate->Requests()[0]->request_type() ==
