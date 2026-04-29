@@ -6,7 +6,6 @@
 import '//resources/cr_components/localized_link/localized_link.js'
 import { assert } from '//resources/js/assert.js'
 import { CrLitElement, PropertyValues } from '//resources/lit/v3_0/lit.rollup.js'
-import { html, nothing } from '//resources/lit/v3_0/lit.rollup.js'
 import { I18nMixinLit } from '//resources/cr_elements/i18n_mixin_lit.js'
 // @ts-expect-error
 import { leoShowAlert } from '//resources/brave/leo.bundle.js'
@@ -141,106 +140,73 @@ export class SettingsBraveAccountRowElement extends I18nMixinLit(CrLitElement) {
     this.browserProxy.rowHandler.openDialog(this.initiatingServiceName)
   }
 
-  protected createFirstRow(
-    title: string,
-    descriptions: (string | ReturnType<typeof html>)[],
-    button?: ReturnType<typeof html>
-  ) {
-    return html`
-      <div class="first-row">
-        <div class="circle">
-          <leo-icon name="social-brave-release-favicon-fullheight-color">
-          </leo-icon>
-        </div>
-        <div class="title-and-description">
-          <div class="title">${title}</div>
-          ${descriptions.map(
-            desc => html`<div class="description">${desc}</div>`)}
-        </div>
-        ${button || nothing}
-      </div>
-    `
+  protected isLoggedIn_(): boolean {
+    return this.state !== undefined &&
+        whichAccountState(this.state) === AccountStateFieldTags.LOGGED_IN
   }
 
-  protected getStateHtml() {
-    const stateHtml: Record<
-      AccountStateFieldTags,
-      () => ReturnType<typeof html>
-    > = {
-      [AccountStateFieldTags.LOGGED_IN]: () => this.createFirstRow(
-        this.i18n(
-            BraveAccountSettingsStrings
-                 .BRAVE_ACCOUNT_TITLE),
-        [html`<div id="email">${this.state!.loggedIn!.email}</div>`],
-        html`
-          <leo-button kind="outline"
-                      size="small"
-                      @click=${this.onLogOutButtonClicked}>
-            ${this.i18n(
-                  BraveAccountSettingsStrings
-                       .SETTINGS_BRAVE_ACCOUNT_LOG_OUT_BUTTON_LABEL)}
-          </leo-button>
-        `
-      ),
-      [AccountStateFieldTags.VERIFICATION]: () => html`
-        ${this.createFirstRow(
-          this.i18n(
-              BraveAccountSettingsStrings
-                  .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_TITLE),
-          [
-            html`<localized-link
-                .localizedString=${`${
-                  this.i18n(BraveAccountSettingsStrings
-                    .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_1)} ${
-                  this.i18n(BraveAccountSettingsStrings
-                    .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_2)} ${
-                  this.i18nAdvanced(BraveAccountSettingsStrings
-                    .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_3,
-                    {tags: ['a'], attrs: ['href']})}`}
-                @link-clicked=${this.onResendConfirmationEmailLinkClicked}>
-            </localized-link>`
-          ]
-        )}
-        <div class="second-row">
-          <leo-button kind="plain"
-                      size="small"
-                      @click=${this.openBraveAccountDialog}>
-            ${this.i18n(
-                  BraveAccountSettingsStrings
-                       .SETTINGS_BRAVE_ACCOUNT_ENTER_REGISTRATION_CODE_BUTTON_LABEL)}
-          </leo-button>
-          <leo-button kind="plain"
-                      size="small"
-                      class="cancel-registration-button"
-                      @click=${this.onCancelRegistrationButtonClicked}>
-            ${this.i18n(
-                  BraveAccountSettingsStrings
-                       .SETTINGS_BRAVE_ACCOUNT_CANCEL_REGISTRATION_BUTTON_LABEL)}
-          </leo-button>
-        </div>
-      `,
-      [AccountStateFieldTags.LOGGED_OUT]: () => this.createFirstRow(
-        this.i18n(
-            BraveAccountSettingsStrings
-                 .SETTINGS_BRAVE_ACCOUNT_LOGGED_OUT_ROW_TITLE),
-        [this.i18n(
-            BraveAccountSettingsStrings
-                 .BRAVE_ACCOUNT_DESCRIPTION)],
-        html`
-          <leo-button kind="filled"
-                      size="small"
-                      @click=${this.openBraveAccountDialog}>
-            ${this.i18n(
-                  BraveAccountSettingsStrings
-                       .SETTINGS_BRAVE_ACCOUNT_GET_STARTED_BUTTON_LABEL)}
-          </leo-button>
-        `
-      ),
-    }
+  protected isVerification_(): boolean {
+    return this.state !== undefined &&
+        whichAccountState(this.state) === AccountStateFieldTags.VERIFICATION
+  }
 
-    return this.state === undefined
-      ? nothing
-      : stateHtml[whichAccountState(this.state)]()
+  protected getLoggedInEmail_(): string {
+    return this.state!.loggedIn!.email
+  }
+
+  protected getLoggedInTitle_(): string {
+    return this.i18n(BraveAccountSettingsStrings.BRAVE_ACCOUNT_TITLE)
+  }
+
+  protected getLogOutButtonLabel_(): string {
+    return this.i18n(
+        BraveAccountSettingsStrings
+             .SETTINGS_BRAVE_ACCOUNT_LOG_OUT_BUTTON_LABEL)
+  }
+
+  protected getVerificationRowTitle_(): string {
+    return this.i18n(
+        BraveAccountSettingsStrings
+            .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_TITLE)
+  }
+
+  protected getVerificationDescription_(): string {
+    return `${
+      this.i18n(BraveAccountSettingsStrings
+        .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_1)} ${
+      this.i18n(BraveAccountSettingsStrings
+        .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_2)} ${
+      this.i18nAdvanced(BraveAccountSettingsStrings
+        .SETTINGS_BRAVE_ACCOUNT_VERIFICATION_ROW_DESCRIPTION_3,
+        {tags: ['a'], attrs: ['href']})}`
+  }
+
+  protected getEnterRegistrationCodeButtonLabel_(): string {
+    return this.i18n(
+        BraveAccountSettingsStrings
+            .SETTINGS_BRAVE_ACCOUNT_ENTER_REGISTRATION_CODE_BUTTON_LABEL)
+  }
+
+  protected getCancelRegistrationButtonLabel_(): string {
+    return this.i18n(
+        BraveAccountSettingsStrings
+            .SETTINGS_BRAVE_ACCOUNT_CANCEL_REGISTRATION_BUTTON_LABEL)
+  }
+
+  protected getLoggedOutRowTitle_(): string {
+    return this.i18n(
+        BraveAccountSettingsStrings
+             .SETTINGS_BRAVE_ACCOUNT_LOGGED_OUT_ROW_TITLE)
+  }
+
+  protected getLoggedOutDescription_(): string {
+    return this.i18n(BraveAccountSettingsStrings.BRAVE_ACCOUNT_DESCRIPTION)
+  }
+
+  protected getGetStartedButtonLabel_(): string {
+    return this.i18n(
+        BraveAccountSettingsStrings
+             .SETTINGS_BRAVE_ACCOUNT_GET_STARTED_BUTTON_LABEL)
   }
 
   private getErrorMessage(error: ResendConfirmationEmailError): string {
