@@ -52,11 +52,10 @@ class AssociatedWebContentsContent : public content::WebContentsObserver,
   class ScriptToolExecutionDelegate {
    public:
     virtual ~ScriptToolExecutionDelegate() = default;
-    virtual void ExecuteScriptTool(
-        content::RenderFrameHost* rfh,
-        const std::string& name,
-        const std::string& input_json,
-        ExecuteScriptToolCallback callback) = 0;
+    virtual void ExecuteScriptTool(content::RenderFrameHost* rfh,
+                                   const std::string& name,
+                                   const std::string& input_json,
+                                   ExecuteScriptToolCallback callback) = 0;
   };
 
   // Delegate to extract print preview content
@@ -93,12 +92,11 @@ class AssociatedWebContentsContent : public content::WebContentsObserver,
 
   // PrintPreviewExtractionDelegate and ScriptToolExecutionDelegate are provided
   // as their implementations are in a different (chrome) layer.
-  AssociatedWebContentsContent(
-      content::WebContents* web_contents,
-      std::unique_ptr<PrintPreviewExtractionDelegate>
-          print_preview_extraction_delegate,
-      std::unique_ptr<ScriptToolExecutionDelegate>
-          script_tool_execution_delegate = nullptr);
+  AssociatedWebContentsContent(content::WebContents* web_contents,
+                               std::unique_ptr<PrintPreviewExtractionDelegate>
+                                   print_preview_extraction_delegate,
+                               std::unique_ptr<ScriptToolExecutionDelegate>
+                                   script_tool_execution_delegate = nullptr);
 
   AssociatedWebContentsContent(const AssociatedWebContentsContent&) = delete;
   AssociatedWebContentsContent& operator=(const AssociatedWebContentsContent&) =

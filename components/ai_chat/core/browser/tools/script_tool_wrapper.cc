@@ -30,8 +30,8 @@ ScriptToolWrapper::ScriptToolWrapper(
   if (!script_tool.input_schema) {
     return;
   }
-  auto schema = base::JSONReader::ReadDict(*script_tool.input_schema,
-                                          base::JSON_PARSE_CHROMIUM_EXTENSIONS);
+  auto schema = base::JSONReader::ReadDict(
+      *script_tool.input_schema, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!schema) {
     return;
   }
@@ -64,8 +64,8 @@ std::optional<base::DictValue> ScriptToolWrapper::InputProperties() const {
   return input_properties_->Clone();
 }
 
-std::optional<std::vector<std::string>>
-ScriptToolWrapper::RequiredProperties() const {
+std::optional<std::vector<std::string>> ScriptToolWrapper::RequiredProperties()
+    const {
   if (required_properties_.empty()) {
     return std::nullopt;
   }
@@ -74,8 +74,6 @@ ScriptToolWrapper::RequiredProperties() const {
 
 void ScriptToolWrapper::UseTool(const std::string& input_json,
                                 UseToolCallback callback) {
-  LOG(ERROR) << "[ScriptToolWrapper] UseTool: name=" << name_
-             << " delegate=" << (delegate_ ? "valid" : "null");
   if (!delegate_) {
     std::move(callback).Run({}, {});
     return;
@@ -84,8 +82,8 @@ void ScriptToolWrapper::UseTool(const std::string& input_json,
       name_, input_json,
       base::BindOnce(
           [](UseToolCallback cb, std::optional<std::string> result) {
-            std::move(cb).Run(
-                CreateContentBlocksForText(result.value_or("")), {});
+            std::move(cb).Run(CreateContentBlocksForText(result.value_or("")),
+                              {});
           },
           std::move(callback)));
 }

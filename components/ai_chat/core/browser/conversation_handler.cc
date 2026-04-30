@@ -2088,30 +2088,19 @@ std::vector<base::WeakPtr<Tool>> ConversationHandler::GetTools() {
 
   // Filter tools not supported
   auto& model = GetCurrentModel();
-  LOG(ERROR) << "[CH] GetTools: filtering " << tools.size()
-             << " tool(s) for model=" << model.key
-             << " supports_tools=" << model.supports_tools;
   tools.erase(
       std::remove_if(
           tools.begin(), tools.end(),
           [&](auto& tool) {
-            bool supported_by_model =
-                tool->IsSupportedByModel(model, conversation_capabilities_);
-            bool supports_conversation = tool->SupportsConversation(
-                GetIsTemporary(),
-                associated_content_manager_->HasAssociatedContent(),
-                conversation_capabilities_);
-            if (!supported_by_model || !supports_conversation) {
-              LOG(ERROR) << "[CH] GetTools: filtering out tool=" << tool->Name()
-                         << " supported_by_model=" << supported_by_model
-                         << " supports_conversation=" << supports_conversation;
-            }
-            return !supported_by_model || !supports_conversation;
+            return (
+                !tool->IsSupportedByModel(model, conversation_capabilities_) ||
+                !tool->SupportsConversation(
+                    GetIsTemporary(),
+                    associated_content_manager_->HasAssociatedContent(),
+                    conversation_capabilities_));
           }),
       tools.end());
 
-  LOG(ERROR) << "[CH] GetTools: " << tools.size()
-             << " tool(s) after filtering";
   return tools;
 }
 

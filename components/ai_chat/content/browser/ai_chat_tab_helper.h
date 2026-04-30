@@ -38,8 +38,7 @@ class AIChatTabHelper : public content::WebContentsUserData<AIChatTabHelper> {
       std::unique_ptr<
           AssociatedWebContentsContent::PrintPreviewExtractionDelegate>
           print_preview_extraction_delegate,
-      std::unique_ptr<
-          AssociatedWebContentsContent::ScriptToolExecutionDelegate>
+      std::unique_ptr<AssociatedWebContentsContent::ScriptToolExecutionDelegate>
           script_tool_execution_delegate = nullptr);
 
   std::unique_ptr<AssociatedWebContentsContent> web_contents_content_;

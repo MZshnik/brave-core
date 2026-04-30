@@ -32,11 +32,10 @@ class ScriptToolExecutor
   ScriptToolExecutor& operator=(const ScriptToolExecutor&) = delete;
 
   // ScriptToolExecutionDelegate:
-  void ExecuteScriptTool(
-      content::RenderFrameHost* rfh,
-      const std::string& name,
-      const std::string& input_json,
-      ExecuteScriptToolCallback callback) override;
+  void ExecuteScriptTool(content::RenderFrameHost* rfh,
+                         const std::string& name,
+                         const std::string& input_json,
+                         ExecuteScriptToolCallback callback) override;
 
  private:
   void OnToolInvoked(ExecuteScriptToolCallback callback,

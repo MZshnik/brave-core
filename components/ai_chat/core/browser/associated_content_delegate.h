@@ -97,8 +97,8 @@ class AssociatedContentDelegate {
   // arguments. The default implementation does nothing (calls back with
   // std::nullopt). Override at the content layer to route to the renderer.
   virtual void ExecuteScriptTool(const std::string& name,
-                                  const std::string& input_json,
-                                  ExecuteScriptToolCallback callback);
+                                 const std::string& input_json,
+                                 ExecuteScriptToolCallback callback);
 
   base::WeakPtr<AssociatedContentDelegate> GetWeakPtr() {
     return weak_ptr_factory_.GetWeakPtr();

@@ -152,7 +152,7 @@ source_set("script_tool_executor") {
     "//chrome/common",
     "//chrome/common:mojo_bindings",
     "//content/public/browser",
-    "//third_party/blink/public/common:common",
+    "//third_party/blink/public/common",
   ]
 }
 
