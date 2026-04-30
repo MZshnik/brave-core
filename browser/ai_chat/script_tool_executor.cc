@@ -24,6 +24,7 @@ void ScriptToolExecutor::ExecuteScriptTool(
     const std::string& name,
     const std::string& input_json,
     ExecuteScriptToolCallback callback) {
+  LOG(ERROR) << "[ScriptToolExecutor] ExecuteScriptTool: name=" << name;
   render_frame_.reset();
   rfh->GetRemoteAssociatedInterfaces()->GetInterface(&render_frame_);
 
@@ -46,8 +47,12 @@ void ScriptToolExecutor::OnToolInvoked(ExecuteScriptToolCallback callback,
   render_frame_.reset();
   if (result && result->code == actor::mojom::ActionResultCode::kOk &&
       result->script_tool_response && result->script_tool_response->result) {
+    LOG(ERROR) << "[ScriptToolExecutor] OnToolInvoked: success, result="
+               << *result->script_tool_response->result;
     std::move(callback).Run(*result->script_tool_response->result);
   } else {
+    LOG(ERROR) << "[ScriptToolExecutor] OnToolInvoked: failed, code="
+               << (result ? static_cast<int>(result->code) : -1);
     std::move(callback).Run(std::nullopt);
   }
 }

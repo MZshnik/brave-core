@@ -178,6 +178,13 @@ class AssociatedWebContentsContent : public content::WebContentsObserver,
   void OnAIPageContentResult(FetchPageContentCallback callback,
                              blink::mojom::AIPageContentPtr result);
 
+  // Fetches script tools from the page via AIPageContentAgent and calls
+  // |done_callback| when complete. Used when the primary fetcher already
+  // provided text content so we still need to populate script_tools_.
+  void FetchScriptToolsFromPage(base::OnceClosure done_callback);
+  void OnScriptToolsFetched(base::OnceClosure done_callback,
+                            blink::mojom::AIPageContentPtr result);
+
   raw_ptr<AIChatMetrics> ai_chat_metrics_;
 
   bool is_same_document_navigation_ = false;

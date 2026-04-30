@@ -74,6 +74,8 @@ ScriptToolWrapper::RequiredProperties() const {
 
 void ScriptToolWrapper::UseTool(const std::string& input_json,
                                 UseToolCallback callback) {
+  LOG(ERROR) << "[ScriptToolWrapper] UseTool: name=" << name_
+             << " delegate=" << (delegate_ ? "valid" : "null");
   if (!delegate_) {
     std::move(callback).Run({}, {});
     return;

@@ -332,6 +332,10 @@ void AssociatedContentManager::GetContent(base::OnceClosure callback) {
                 return;
               }
 
+              // Rebuild tools now that all content (including script_tools_)
+              // has been fetched from the page.
+              LOG(ERROR) << "[ACM] GetContent barrier: rebuilding tools";
+              self->RebuildTools();
               self->on_page_text_fetch_complete_->Signal();
               self->on_page_text_fetch_complete_ = nullptr;
             },
@@ -479,13 +483,16 @@ void AssociatedContentManager::OnTitleChanged(
 }
 
 void AssociatedContentManager::OnNewGenerationLoop() {
+  LOG(ERROR) << "[ACM] OnNewGenerationLoop: rebuilding tools";
   RebuildTools();
 }
 
 std::vector<base::WeakPtr<Tool>> AssociatedContentManager::GetTools() {
+  LOG(ERROR) << "[ACM] GetTools: returning " << tools_.size() << " tool(s)";
   std::vector<base::WeakPtr<Tool>> tool_ptrs;
   tool_ptrs.reserve(tools_.size());
   for (const auto& tool : tools_) {
+    LOG(ERROR) << "[ACM] GetTools: tool=" << tool->Name();
     tool_ptrs.push_back(tool->GetWeakPtr());
   }
   return tool_ptrs;
@@ -493,12 +500,18 @@ std::vector<base::WeakPtr<Tool>> AssociatedContentManager::GetTools() {
 
 void AssociatedContentManager::RebuildTools() {
   tools_.clear();
+  LOG(ERROR) << "[ACM] RebuildTools: " << content_delegates_.size()
+             << " delegate(s)";
   for (auto* delegate : content_delegates_) {
+    LOG(ERROR) << "[ACM] RebuildTools: delegate has "
+               << delegate->script_tools().size() << " script tool(s)";
     for (const auto& script_tool : delegate->script_tools()) {
+      LOG(ERROR) << "[ACM] RebuildTools: adding tool=" << script_tool->name;
       tools_.push_back(std::make_unique<ScriptToolWrapper>(
           *script_tool, delegate->GetWeakPtr()));
     }
   }
+  LOG(ERROR) << "[ACM] RebuildTools: total tools_=" << tools_.size();
 }
 
 void AssociatedContentManager::DetachContent() {

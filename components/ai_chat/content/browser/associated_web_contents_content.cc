@@ -221,15 +221,19 @@ void AssociatedWebContentsContent::OnFetchPageContentComplete(
     return;
   }
   // If content is still empty after page load, try AIPageContentAgent as a
-  // fallback. It uses layout tree walking which may succeed where AX
-  // tree-based extraction fails.
+  // fallback. It also populates script_tools_.
   if (content.empty() && !is_video && is_page_loaded_) {
     DVLOG(1) << "page content empty, trying AIPageContentAgent fallback";
     FetchPageContentFromAIPageContentAgent(std::move(callback));
     return;
   }
-  std::move(callback).Run(std::move(content), is_video,
-                          std::move(invalidation_token));
+  // Primary fetch succeeded. Also fetch script_tools_ from AIPageContentAgent
+  // before invoking the callback, since the primary fetcher doesn't provide them.
+  FetchScriptToolsFromPage(base::BindOnce(
+      [](FetchPageContentCallback cb, std::string text, bool video,
+         std::string token) { std::move(cb).Run(std::move(text), video, std::move(token)); },
+      std::move(callback), std::move(content), is_video,
+      std::move(invalidation_token)));
 }
 
 void AssociatedWebContentsContent::SetPendingGetContentCallback(
@@ -311,6 +315,11 @@ void AssociatedWebContentsContent::FetchPageContentFromAIPageContentAgent(
 void AssociatedWebContentsContent::OnAIPageContentResult(
     FetchPageContentCallback callback,
     blink::mojom::AIPageContentPtr result) {
+  LOG(ERROR) << "[AWCC] OnAIPageContentResult: "
+             << (result && result->frame_data
+                     ? result->frame_data->script_tools.size()
+                     : 0u)
+             << " script tool(s) from page";
   set_script_tools(std::move(result->frame_data->script_tools));
 
   ai_page_content_agent_.reset();
@@ -325,6 +334,44 @@ void AssociatedWebContentsContent::OnAIPageContentResult(
            << (content.empty() ? "returned empty" : "succeeded");
   DVLOG(2) << "AIPageContentAgent extracted content: " << content;
   std::move(callback).Run(std::move(content), false, "");
+}
+
+void AssociatedWebContentsContent::FetchScriptToolsFromPage(
+    base::OnceClosure done_callback) {
+  content::RenderFrameHost* rfh = web_contents()->GetPrimaryMainFrame();
+  if (!rfh || !rfh->IsRenderFrameLive()) {
+    LOG(ERROR) << "[AWCC] FetchScriptToolsFromPage: no live RFH";
+    std::move(done_callback).Run();
+    return;
+  }
+  LOG(ERROR) << "[AWCC] FetchScriptToolsFromPage: calling AIPageContentAgent";
+  ai_page_content_agent_.reset();
+  rfh->GetRemoteInterfaces()->GetInterface(
+      ai_page_content_agent_.BindNewPipeAndPassReceiver());
+  auto options = blink::mojom::AIPageContentOptions::New();
+  options->mode = blink::mojom::AIPageContentMode::kDefault;
+  options->on_critical_path = true;
+  ai_page_content_agent_->GetAIPageContent(
+      std::move(options),
+      mojo::WrapCallbackWithDefaultInvokeIfNotRun(
+          base::BindOnce(&AssociatedWebContentsContent::OnScriptToolsFetched,
+                         weak_ptr_factory_.GetWeakPtr(),
+                         std::move(done_callback)),
+          nullptr));
+}
+
+void AssociatedWebContentsContent::OnScriptToolsFetched(
+    base::OnceClosure done_callback,
+    blink::mojom::AIPageContentPtr result) {
+  ai_page_content_agent_.reset();
+  if (result && result->frame_data) {
+    LOG(ERROR) << "[AWCC] OnScriptToolsFetched: "
+               << result->frame_data->script_tools.size() << " script tool(s)";
+    set_script_tools(std::move(result->frame_data->script_tools));
+  } else {
+    LOG(ERROR) << "[AWCC] OnScriptToolsFetched: no result";
+  }
+  std::move(done_callback).Run();
 }
 
 void AssociatedWebContentsContent::GetSearchSummarizerKey(
@@ -346,15 +393,19 @@ void AssociatedWebContentsContent::ExecuteScriptTool(
     const std::string& name,
     const std::string& input_json,
     ExecuteScriptToolCallback callback) {
+  LOG(ERROR) << "[AWCC] ExecuteScriptTool: name=" << name;
   if (!script_tool_execution_delegate_) {
+    LOG(ERROR) << "[AWCC] ExecuteScriptTool: no delegate, returning nullopt";
     std::move(callback).Run(std::nullopt);
     return;
   }
   content::RenderFrameHost* rfh = web_contents()->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
+    LOG(ERROR) << "[AWCC] ExecuteScriptTool: no live RFH, returning nullopt";
     std::move(callback).Run(std::nullopt);
     return;
   }
+  LOG(ERROR) << "[AWCC] ExecuteScriptTool: dispatching to chrome delegate";
   script_tool_execution_delegate_->ExecuteScriptTool(rfh, name, input_json,
                                                       std::move(callback));
 }
