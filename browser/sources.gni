@@ -831,6 +831,11 @@ if (enable_extensions) {
       [ "//brave/browser/extensions:brave_prefs_util_impl" ]
 }
 
+if (enable_ai_chat) {
+  brave_chrome_browser_deps +=
+      [ "//brave/browser/ai_chat:script_tool_executor" ]
+}
+
 if (enable_ai_chat && enable_print_preview) {
   brave_chrome_browser_deps += [
     "//brave/browser/ai_chat:print_preview_extractor",

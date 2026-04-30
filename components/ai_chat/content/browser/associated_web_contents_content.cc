@@ -77,13 +77,16 @@ void ExtractTextFromAIPageContentNode(
 AssociatedWebContentsContent::AssociatedWebContentsContent(
     content::WebContents* web_contents,
     std::unique_ptr<PrintPreviewExtractionDelegate>
-        print_preview_extraction_delegate)
+        print_preview_extraction_delegate,
+    std::unique_ptr<ScriptToolExecutionDelegate> script_tool_execution_delegate)
     : content::WebContentsObserver(web_contents),
       AssociatedContentDriver(web_contents->GetBrowserContext()
                                   ->GetDefaultStoragePartition()
                                   ->GetURLLoaderFactoryForBrowserProcess()),
       print_preview_extraction_delegate_(
-          std::move(print_preview_extraction_delegate)) {
+          std::move(print_preview_extraction_delegate)),
+      script_tool_execution_delegate_(
+          std::move(script_tool_execution_delegate)) {
   if (features::IsAIChatDetailedPageContentExtractionEnabled()) {
     page_content_fetcher_delegate_ =
         std::make_unique<AIPageContentFetcher>(web_contents);
@@ -337,6 +340,23 @@ void AssociatedWebContentsContent::GetSearchSummarizerKey(
 void AssociatedWebContentsContent::GetOpenAIChatButtonNonce(
     mojom::PageContentExtractor::GetOpenAIChatButtonNonceCallback callback) {
   page_content_fetcher_delegate_->GetOpenAIChatButtonNonce(std::move(callback));
+}
+
+void AssociatedWebContentsContent::ExecuteScriptTool(
+    const std::string& name,
+    const std::string& input_json,
+    ExecuteScriptToolCallback callback) {
+  if (!script_tool_execution_delegate_) {
+    std::move(callback).Run(std::nullopt);
+    return;
+  }
+  content::RenderFrameHost* rfh = web_contents()->GetPrimaryMainFrame();
+  if (!rfh || !rfh->IsRenderFrameLive()) {
+    std::move(callback).Run(std::nullopt);
+    return;
+  }
+  script_tool_execution_delegate_->ExecuteScriptTool(rfh, name, input_json,
+                                                      std::move(callback));
 }
 
 bool AssociatedWebContentsContent::HasOpenAIChatPermission() const {

@@ -25,6 +25,7 @@
 #include "brave/components/ai_chat/core/browser/associated_content_delegate.h"
 #include "brave/components/ai_chat/core/browser/conversation_handler.h"
 #include "brave/components/ai_chat/core/browser/model_service.h"
+#include "brave/components/ai_chat/core/browser/tools/script_tool_wrapper.h"
 
 namespace ai_chat {
 
@@ -475,6 +476,29 @@ void AssociatedContentManager::OnTitleChanged(
   DVLOG(1) << __func__;
 
   conversation_->OnAssociatedContentUpdated();
+}
+
+void AssociatedContentManager::OnNewGenerationLoop() {
+  RebuildTools();
+}
+
+std::vector<base::WeakPtr<Tool>> AssociatedContentManager::GetTools() {
+  std::vector<base::WeakPtr<Tool>> tool_ptrs;
+  tool_ptrs.reserve(tools_.size());
+  for (const auto& tool : tools_) {
+    tool_ptrs.push_back(tool->GetWeakPtr());
+  }
+  return tool_ptrs;
+}
+
+void AssociatedContentManager::RebuildTools() {
+  tools_.clear();
+  for (auto* delegate : content_delegates_) {
+    for (const auto& script_tool : delegate->script_tools()) {
+      tools_.push_back(std::make_unique<ScriptToolWrapper>(
+          *script_tool, delegate->GetWeakPtr()));
+    }
+  }
 }
 
 void AssociatedContentManager::DetachContent() {

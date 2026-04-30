@@ -19,6 +19,8 @@
 #include "base/scoped_multi_source_observation.h"
 #include "brave/components/ai_chat/core/browser/associated_archive_content.h"
 #include "brave/components/ai_chat/core/browser/associated_content_delegate.h"
+#include "brave/components/ai_chat/core/browser/tools/tool.h"
+#include "brave/components/ai_chat/core/browser/tools/tool_provider.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom.h"
 #include "brave/components/ai_chat/core/common/mojom/common.mojom.h"
 
@@ -35,7 +37,8 @@ using PageContentsMap = base::flat_map<std::string, PageContents>;
 // - Loading archived content
 // - Archiving content as the user navigates aways
 // - Managing whether content should be used as part of the context
-class AssociatedContentManager : public AssociatedContentDelegate::Observer {
+class AssociatedContentManager : public ToolProvider,
+                                 public AssociatedContentDelegate::Observer {
  public:
   explicit AssociatedContentManager(ConversationHandler* conversation);
   ~AssociatedContentManager() override;
@@ -110,6 +113,10 @@ class AssociatedContentManager : public AssociatedContentDelegate::Observer {
   // The number of content delegates.
   size_t GetContentDelegateCount() const;
 
+  // ToolProvider:
+  void OnNewGenerationLoop() override;
+  std::vector<base::WeakPtr<Tool>> GetTools() override;
+
   // AssociatedContentDelegate::Observer:
   void OnRequestArchive(AssociatedContentDelegate* delegate) override;
   void OnDestroyed(AssociatedContentDelegate* delegate) override;
@@ -121,9 +128,11 @@ class AssociatedContentManager : public AssociatedContentDelegate::Observer {
 
  private:
   void DetachContent();
+  void RebuildTools();
 
   raw_ptr<ConversationHandler> conversation_;
 
+  std::vector<std::unique_ptr<Tool>> tools_;
   std::vector<AssociatedContentDelegate*> content_delegates_;
   base::flat_map<std::string, std::string> content_uuid_to_conversation_turns_;
 

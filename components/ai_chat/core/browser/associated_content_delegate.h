@@ -6,6 +6,7 @@
 #ifndef BRAVE_COMPONENTS_AI_CHAT_CORE_BROWSER_ASSOCIATED_CONTENT_DELEGATE_H_
 #define BRAVE_COMPONENTS_AI_CHAT_CORE_BROWSER_ASSOCIATED_CONTENT_DELEGATE_H_
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,11 @@ struct PageContent {
 // with transcripts fetched over the network.
 using GetPageContentCallback = base::OnceCallback<void(PageContent)>;
 
+// Callback for ExecuteScriptTool. Receives the tool result string, or
+// std::nullopt if the tool failed or was unavailable.
+using ExecuteScriptToolCallback =
+    base::OnceCallback<void(std::optional<std::string>)>;
+
 // TODO(petemill): consider making SearchQuerySummary generic (StagedEntries)
 // or a list of ConversationTurn objects.
 using GetStagedEntriesCallback = base::OnceCallback<void(
@@ -86,6 +92,13 @@ class AssociatedContentDelegate {
   virtual bool HasOpenAIChatPermission() const;
   virtual void GetScreenshots(
       mojom::ConversationHandler::GetScreenshotsCallback callback);
+
+  // Executes a page-defined script tool by name with the given JSON input
+  // arguments. The default implementation does nothing (calls back with
+  // std::nullopt). Override at the content layer to route to the renderer.
+  virtual void ExecuteScriptTool(const std::string& name,
+                                  const std::string& input_json,
+                                  ExecuteScriptToolCallback callback);
 
   base::WeakPtr<AssociatedContentDelegate> GetWeakPtr() {
     return weak_ptr_factory_.GetWeakPtr();

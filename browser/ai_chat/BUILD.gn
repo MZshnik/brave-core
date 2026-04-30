@@ -141,6 +141,21 @@ static_library("ai_chat") {
   }
 }
 
+source_set("script_tool_executor") {
+  sources = [
+    "script_tool_executor.cc",
+    "script_tool_executor.h",
+  ]
+  deps = [
+    "//base",
+    "//brave/components/ai_chat/content/browser",
+    "//chrome/common",
+    "//chrome/common:mojo_bindings",
+    "//content/public/browser",
+    "//third_party/blink/public/common:common",
+  ]
+}
+
 if (enable_print_preview) {
   source_set("print_preview_extractor") {
     sources = [

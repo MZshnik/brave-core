@@ -47,6 +47,18 @@ class AIChatMetrics;
 class AssociatedWebContentsContent : public content::WebContentsObserver,
                                      public AssociatedContentDriver {
  public:
+  // Delegate to execute page-defined script tools in the renderer. Lives in
+  // the chrome layer where chrome::mojom::ChromeRenderFrame is accessible.
+  class ScriptToolExecutionDelegate {
+   public:
+    virtual ~ScriptToolExecutionDelegate() = default;
+    virtual void ExecuteScriptTool(
+        content::RenderFrameHost* rfh,
+        const std::string& name,
+        const std::string& input_json,
+        ExecuteScriptToolCallback callback) = 0;
+  };
+
   // Delegate to extract print preview content
   class PrintPreviewExtractionDelegate {
    public:
@@ -79,11 +91,14 @@ class AssociatedWebContentsContent : public content::WebContentsObserver,
             callback) = 0;
   };
 
-  // PrintPreviewExtractionDelegate is provided as it's implementation is
-  // in a different layer.
-  AssociatedWebContentsContent(content::WebContents* web_contents,
-                               std::unique_ptr<PrintPreviewExtractionDelegate>
-                                   print_preview_extraction_delegate);
+  // PrintPreviewExtractionDelegate and ScriptToolExecutionDelegate are provided
+  // as their implementations are in a different (chrome) layer.
+  AssociatedWebContentsContent(
+      content::WebContents* web_contents,
+      std::unique_ptr<PrintPreviewExtractionDelegate>
+          print_preview_extraction_delegate,
+      std::unique_ptr<ScriptToolExecutionDelegate>
+          script_tool_execution_delegate = nullptr);
 
   AssociatedWebContentsContent(const AssociatedWebContentsContent&) = delete;
   AssociatedWebContentsContent& operator=(const AssociatedWebContentsContent&) =
@@ -125,6 +140,9 @@ class AssociatedWebContentsContent : public content::WebContentsObserver,
   void GetPageContent(FetchPageContentCallback callback,
                       std::string_view invalidation_token) override;
   void OnNewPage(int64_t navigation_id) override;
+  void ExecuteScriptTool(const std::string& name,
+                         const std::string& input_json,
+                         ExecuteScriptToolCallback callback) override;
 
   // Called when an event of significance occurs that, if the page is a
   // same-document navigation, should result in that previous navigation
@@ -177,6 +195,7 @@ class AssociatedWebContentsContent : public content::WebContentsObserver,
 
   std::unique_ptr<PrintPreviewExtractionDelegate>
       print_preview_extraction_delegate_;
+  std::unique_ptr<ScriptToolExecutionDelegate> script_tool_execution_delegate_;
   std::unique_ptr<PageContentFetcherDelegate> page_content_fetcher_delegate_;
 
   std::unique_ptr<FullScreenshotter> full_screenshotter_;

@@ -48,6 +48,7 @@
 #if BUILDFLAG(ENABLE_AI_CHAT)
 #include "brave/browser/ai_chat/ai_chat_service_factory.h"
 #include "brave/browser/ai_chat/ai_chat_utils.h"
+#include "brave/browser/ai_chat/script_tool_executor.h"
 #include "brave/components/ai_chat/content/browser/ai_chat_tab_helper.h"
 #endif
 
@@ -185,11 +186,11 @@ void AttachTabHelpers(content::WebContents* web_contents) {
                         return printing::PrintPreviewUI::
                             GetPrintPreviewUIRequestIdMap();
                       }));
-                }))
+                })),
 #else
-        nullptr
+        nullptr,
 #endif
-    );
+        std::make_unique<ai_chat::ScriptToolExecutor>());
   }
 #endif
 

@@ -31,13 +31,16 @@ class AIChatTabHelper : public content::WebContentsUserData<AIChatTabHelper> {
  private:
   friend class content::WebContentsUserData<AIChatTabHelper>;
 
-  // PrintPreviewExtractionDelegate is provided as it's implementation is
-  // in a different layer.
+  // PrintPreviewExtractionDelegate and ScriptToolExecutionDelegate are provided
+  // as their implementations are in a different (chrome) layer.
   AIChatTabHelper(
       content::WebContents* web_contents,
       std::unique_ptr<
           AssociatedWebContentsContent::PrintPreviewExtractionDelegate>
-          print_preview_extraction_delegate);
+          print_preview_extraction_delegate,
+      std::unique_ptr<
+          AssociatedWebContentsContent::ScriptToolExecutionDelegate>
+          script_tool_execution_delegate = nullptr);
 
   std::unique_ptr<AssociatedWebContentsContent> web_contents_content_;
 

@@ -64,6 +64,13 @@ void AssociatedContentDelegate::GetScreenshots(
   std::move(callback).Run(std::nullopt);
 }
 
+void AssociatedContentDelegate::ExecuteScriptTool(
+    const std::string& name,
+    const std::string& input_json,
+    ExecuteScriptToolCallback callback) {
+  std::move(callback).Run(std::nullopt);
+}
+
 void AssociatedContentDelegate::NotifyNewPage() {
   for (auto& observer : observers_) {
     observer.OnNewPage(this);
