@@ -14,6 +14,7 @@
 #include "brave/components/brave_wallet/browser/keyring_service.h"
 #include "brave/components/brave_wallet/browser/network_manager.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
+#include "brave/components/brave_wallet/common/encoding_utils.h"
 
 namespace brave_wallet {
 
@@ -136,6 +137,23 @@ void PolkadotWalletService::GetAccountBalance(
 
   polkadot_substrate_rpc_.GetAccountBalance(chain_id, *pubkey,
                                             std::move(callback));
+}
+
+void PolkadotWalletService::ValidateAddressForTransaction(
+    const std::string& chain_id,
+    const std::string& address,
+    ValidateAddressForTransactionCallback callback) {
+  auto network = network_manager_->GetChain(chain_id, mojom::CoinType::DOT);
+  if (!network) {
+    std::move(callback).Run(mojom::PolkadotAddresError::kInvalidAddressFormat);
+    return;
+  }
+
+  metadata_provider_.GetChainMetadata(
+      chain_id,
+      base::BindOnce(
+          &PolkadotWalletService::OnGetChainMetadataForValidateAddress,
+          weak_ptr_factory_.GetWeakPtr(), address, std::move(callback)));
 }
 
 void PolkadotWalletService::GenerateSignedTransferExtrinsicImpl(
@@ -263,6 +281,29 @@ void PolkadotWalletService::OnEstimatedFee(
     GetFeeEstimateCallback callback,
     base::expected<uint128_t, std::string> partial_fee) {
   std::move(callback).Run(std::move(partial_fee));
+}
+
+void PolkadotWalletService::OnGetChainMetadataForValidateAddress(
+    const std::string& address,
+    ValidateAddressForTransactionCallback callback,
+    base::expected<PolkadotChainMetadata, std::string> metadata) {
+  if (!metadata.has_value()) {
+    std::move(callback).Run(mojom::PolkadotAddresError::kInvalidAddressFormat);
+    return;
+  }
+
+  auto ss58_address = Ss58Address::Decode(address);
+  if (ss58_address && ss58_address->prefix != metadata->GetSs58Prefix()) {
+    std::move(callback).Run(mojom::PolkadotAddresError::kInvalidPrefix);
+    return;
+  }
+
+  if (!ParsePolkadotAccount(address, metadata->GetSs58Prefix())) {
+    std::move(callback).Run(mojom::PolkadotAddresError::kInvalidAddressFormat);
+    return;
+  }
+
+  std::move(callback).Run(mojom::PolkadotAddresError::kNoError);
 }
 
 }  // namespace brave_wallet

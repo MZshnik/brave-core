@@ -38,6 +38,7 @@ import {
   useGetIsBase58EncodedSolPubkeyQuery,
   useGetZCashAccountInfoQuery,
   useGetZCashTransactionTypeQuery,
+  useValidatePolkadotAddressQuery,
 } from '../../../../../common/slices/api.slice'
 
 // Utils
@@ -284,6 +285,18 @@ export const SelectAddressModal = React.forwardRef<HTMLDivElement, Props>(
         : skipToken,
     )
 
+    const { data: getPolkadotAddressValidationResult = BraveWallet.PolkadotAddresError.kNoError } = useValidatePolkadotAddressQuery(
+      fromAccountId
+        && selectedNetwork
+        && fromAccountId.coin === BraveWallet.CoinType.DOT
+        && trimmedSearchValue
+        ? {
+            chainId: selectedNetwork.chainId,
+            address: trimmedSearchValue,
+          }
+        : skipToken,
+    )
+
     const addressMessageId: AddressMessageInfoIds | undefined =
       React.useMemo(() => {
         return processAddressOrUrl({
@@ -294,6 +307,7 @@ export const SelectAddressModal = React.forwardRef<HTMLDivElement, Props>(
           coinType: fromAccountId?.coin ?? BraveWallet.CoinType.ETH,
           token: selectedAsset,
           zcashAddressError: getZCashTransactionTypeResult.error,
+          polkadotAddressError: getPolkadotAddressValidationResult,
           fullTokenList,
           hasNameServiceError,
           isValidExtension: searchValueHasValidExtension,
@@ -777,6 +791,25 @@ const processZCashAddress = (
   return AddressMessageInfoIds.invalidAddressError
 }
 
+const processPolkadotAddress = (
+  polkadotAddressError: BraveWallet.PolkadotAddresError,
+) => {
+  if (polkadotAddressError === BraveWallet.PolkadotAddresError.kNoError) {
+    return undefined
+  }
+  if (polkadotAddressError === BraveWallet.PolkadotAddresError.kInvalidPrefix) {
+    return AddressMessageInfoIds.polkadotInvalidPrefixError
+  }
+  if (
+    polkadotAddressError
+    === BraveWallet.PolkadotAddresError.kInvalidAddressFormat
+  ) {
+    return AddressMessageInfoIds.invalidAddressError
+  }
+
+  return AddressMessageInfoIds.invalidAddressError
+}
+
 const processFilecoinAddress = (addressOrUrl: string, checksum: string) => {
   const valueToLowerCase = addressOrUrl.toLowerCase()
 
@@ -856,6 +889,7 @@ function processAddressOrUrl({
   isBase58,
   coinType,
   zcashAddressError,
+  polkadotAddressError,
   token,
   fullTokenList,
   isValidExtension,
@@ -872,6 +906,7 @@ function processAddressOrUrl({
   ethAddressChecksum: string
   isBase58: boolean
   zcashAddressError: BraveWallet.ZCashAddressError
+  polkadotAddressError: BraveWallet.PolkadotAddresError
   fullTokenList: BraveWallet.BlockchainToken[]
   isValidExtension: boolean
   resolvedDomainAddress: string | undefined
@@ -933,6 +968,9 @@ function processAddressOrUrl({
         addressOrUrl,
         token?.chainId === BraveWallet.CARDANO_TESTNET,
       )
+    }
+    case BraveWallet.CoinType.DOT: {
+      return processPolkadotAddress(polkadotAddressError)
     }
     default: {
       console.log(`Unknown coin ${coinType}`)
