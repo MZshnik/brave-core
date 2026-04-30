@@ -308,6 +308,8 @@ void AssociatedWebContentsContent::FetchPageContentFromAIPageContentAgent(
 void AssociatedWebContentsContent::OnAIPageContentResult(
     FetchPageContentCallback callback,
     blink::mojom::AIPageContentPtr result) {
+  set_script_tools(std::move(result->frame_data->script_tools));
+
   ai_page_content_agent_.reset();
 
   std::string content;

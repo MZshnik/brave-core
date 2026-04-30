@@ -15,8 +15,9 @@
 #include "brave/components/ai_chat/core/browser/types.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom.h"
 #include "brave/components/ai_chat/core/common/mojom/common.mojom.h"
+#include "third_party/blink/public/mojom/content_extraction/ai_page_content.mojom.h"
+#include "third_party/blink/public/mojom/content_extraction/script_tools.mojom-forward.h"
 #include "url/gurl.h"
-
 namespace ai_chat {
 
 struct PageContent {
@@ -107,6 +108,14 @@ class AssociatedContentDelegate {
     return cached_page_content_;
   }
 
+  const std::vector<blink::mojom::ScriptToolPtr>& script_tools() const {
+    return script_tools_;
+  }
+
+  void set_script_tools(std::vector<blink::mojom::ScriptToolPtr> script_tools) {
+    script_tools_ = std::move(script_tools);
+  }
+
  protected:
   // Content has navigated
   virtual void OnNewPage(int64_t navigation_id);
@@ -122,6 +131,8 @@ class AssociatedContentDelegate {
  private:
   friend class MockAssociatedContent;
   friend class MockAssociatedContentDriver;
+
+  std::vector<blink::mojom::ScriptToolPtr> script_tools_;
 
   int content_id_ = -1;
 
