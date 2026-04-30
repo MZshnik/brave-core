@@ -27,6 +27,8 @@ static_library("browser") {
     "associated_archive_content.h",
     "associated_content_delegate.cc",
     "associated_content_delegate.h",
+    "associated_content_tool_provider.cc",
+    "associated_content_tool_provider.h",
     "associated_content_driver.cc",
     "associated_content_driver.h",
     "associated_content_manager.cc",
