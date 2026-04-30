@@ -151,6 +151,7 @@ ConversationHandler::ConversationHandler(
   BuildCapabilitiesSet();
 
   // Observe tool providers
+  associated_content_manager_->AddObserver(this);
   for (const auto& tool_provider : tool_providers_) {
     tool_provider->AddObserver(this);
   }
@@ -186,6 +187,7 @@ ConversationHandler::ConversationHandler(
 
 ConversationHandler::~ConversationHandler() {
   OnConversationDeleted();
+  associated_content_manager_->RemoveObserver(this);
   for (const auto& tool_provider : tool_providers_) {
     tool_provider->RemoveObserver(this);
   }
@@ -1179,6 +1181,7 @@ void ConversationHandler::AddToConversationHistory(
 void ConversationHandler::InitToolsForNewGenerationLoop() {
   // We can reset any already-created tools that don't want state to
   // survive between loops (i.e. when a new user message is received).
+  associated_content_manager_->OnNewGenerationLoop();
   for (auto& tool_provider : tool_providers_) {
     tool_provider->OnNewGenerationLoop();
   }
@@ -1688,6 +1691,7 @@ void ConversationHandler::CompleteGeneration(bool success) {
     if (!MaybeRespondToNextToolUseRequest()) {
       // Inform tool providers that there are no more tool use requests to
       // handle, that the loop is complete until a new message is submitted.
+      associated_content_manager_->OnGenerationCompleteWithNoToolsToHandle();
       for (auto& tool_provider : tool_providers_) {
         tool_provider->OnGenerationCompleteWithNoToolsToHandle();
       }
@@ -1782,6 +1786,7 @@ void ConversationHandler::PauseTask() {
       tool_use_task_state_ != mojom::TaskState::kStopped) {
     tool_use_task_state_ = mojom::TaskState::kPaused;
     OnToolUseTaskStateChanged();
+    associated_content_manager_->PauseAllTasks();
     for (auto& tool_provider : tool_providers_) {
       tool_provider->PauseAllTasks();
     }
@@ -1801,6 +1806,7 @@ void ConversationHandler::ResumeTask() {
   // `OnTaskStateChanged` which calls this function again.
   tool_use_task_state_ = mojom::TaskState::kRunning;
 
+  associated_content_manager_->ResumeAllTasks();
   for (auto& tool_provider : tool_providers_) {
     tool_provider->ResumeAllTasks();
   }
@@ -1825,6 +1831,7 @@ void ConversationHandler::StopTask() {
   tool_use_task_state_ = mojom::TaskState::kStopped;
   OnToolUseTaskStateChanged();
 
+  associated_content_manager_->StopAllTasks();
   for (auto& tool_provider : tool_providers_) {
     tool_provider->StopAllTasks();
   }
@@ -2073,6 +2080,8 @@ void ConversationHandler::OnStateForConversationEntriesChanged() {
 std::vector<base::WeakPtr<Tool>> ConversationHandler::GetTools() {
   std::vector<base::WeakPtr<Tool>> tools;
   // Get provided tools
+  std::ranges::move(associated_content_manager_->GetTools(),
+                    std::back_inserter(tools));
   for (auto& tool_provider : tool_providers_) {
     std::ranges::move(tool_provider->GetTools(), std::back_inserter(tools));
   }
