@@ -31,6 +31,7 @@
 #include "brave/components/brave_account/pref_names.h"
 #include "components/os_crypt/async/browser/os_crypt_async.h"
 #include "components/prefs/pref_service.h"
+#include "components/prefs/scoped_user_pref_update.h"
 #include "net/http/http_request_headers.h"
 #include "net/http/http_status_code.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
@@ -94,6 +95,21 @@ inline constexpr net::NetworkTrafficAnnotationTag kTrafficAnnotation =
       "and cannot be disabled by policy."
   }
 )");
+
+template <typename VerificationPtr>
+auto MakeVerification(std::optional<int> verification_intent) {
+  VerificationPtr verification;
+
+  if (verification_intent) {
+    if (const auto intent =
+            static_cast<decltype(verification->intent)>(*verification_intent);
+        mojom::IsKnownEnumValue(intent)) {
+      verification = VerificationPtr::Struct::New(intent);
+    }
+  }
+
+  return verification;
+}
 
 template <typename Request>
 auto MakeRequest() {
@@ -191,21 +207,12 @@ void BraveAccountService::FinishInitialization(
     os_crypt_async::Encryptor encryptor) {
   encryptor_ = std::move(encryptor);
 
-  pref_verification_token_.Init(
-      prefs::kBraveAccountVerificationToken, pref_service_,
-      base::BindRepeating(&BraveAccountService::OnVerificationTokenChanged,
+  pref_change_registrar_.Init(pref_service_);
+  pref_change_registrar_.Add(
+      prefs::kBraveAccountState,
+      base::BindRepeating(&BraveAccountService::OnAccountStateChanged,
                           base::Unretained(this)));
-
-  pref_authentication_token_.Init(
-      prefs::kBraveAccountAuthenticationToken, pref_service_,
-      base::BindRepeating(&BraveAccountService::OnAuthenticationTokenChanged,
-                          base::Unretained(this)));
-  OnAuthenticationTokenChanged();
-
-  pref_email_address_.Init(
-      prefs::kBraveAccountEmailAddress, pref_service_,
-      base::BindRepeating(&BraveAccountService::OnEmailAddressChanged,
-                          base::Unretained(this)));
+  OnAccountStateChanged();
 
   for (auto& pending_receiver : pending_receivers_) {
     authentication_receivers_.Add(this, std::move(pending_receiver));
@@ -268,12 +275,12 @@ void BraveAccountService::RegisterVerify(const std::string& code,
                                          RegisterVerifyCallback callback) {
   CHECK(!code.empty());
 
-  const auto encrypted_verification_token =
-      pref_service_->GetString(prefs::kBraveAccountVerificationToken);
+  const auto encrypted_verification_token = GetEncryptedVerificationToken(
+      mojom::LoggedOutVerificationIntent::kRegistration);
   if (encrypted_verification_token.empty()) {
     return std::move(callback).Run(
         base::unexpected(MakeClientError<mojom::RegisterError>(
-            mojom::RegisterClientErrorCode::kUserNotInTheVerificationState)));
+            mojom::RegisterClientErrorCode::kNoRegistrationInProgress)));
   }
 
   const auto verification_token = Decrypt(encrypted_verification_token);
@@ -294,13 +301,13 @@ void BraveAccountService::RegisterVerify(const std::string& code,
 
 void BraveAccountService::ResendConfirmationEmail(
     ResendConfirmationEmailCallback callback) {
-  const auto encrypted_verification_token =
-      pref_service_->GetString(prefs::kBraveAccountVerificationToken);
+  const auto encrypted_verification_token = GetEncryptedVerificationToken(
+      mojom::LoggedOutVerificationIntent::kRegistration);
   if (encrypted_verification_token.empty()) {
     return std::move(callback).Run(
         base::unexpected(MakeClientError<mojom::ResendConfirmationEmailError>(
             mojom::ResendConfirmationEmailClientErrorCode::
-                kUserNotInTheVerificationState)));
+                kNoRegistrationInProgress)));
   }
 
   const auto verification_token = Decrypt(encrypted_verification_token);
@@ -324,10 +331,10 @@ void BraveAccountService::ResendConfirmationEmail(
 }
 
 void BraveAccountService::CancelRegistration() {
-  const auto encrypted_verification_token =
-      pref_service_->GetString(prefs::kBraveAccountVerificationToken);
+  const auto encrypted_verification_token = GetEncryptedVerificationToken(
+      mojom::LoggedOutVerificationIntent::kRegistration);
 
-  pref_service_->ClearPref(prefs::kBraveAccountVerificationToken);
+  SetLoggedOut();
 
   const auto verification_token = Decrypt(encrypted_verification_token);
   if (verification_token.empty()) {
@@ -384,10 +391,9 @@ void BraveAccountService::LoginFinalize(
 }
 
 void BraveAccountService::LogOut() {
-  const auto encrypted_authentication_token =
-      pref_service_->GetString(prefs::kBraveAccountAuthenticationToken);
+  const auto encrypted_authentication_token = GetEncryptedAuthenticationToken();
 
-  pref_service_->ClearPref(prefs::kBraveAccountAuthenticationToken);
+  SetLoggedOut();
 
   const auto authentication_token = Decrypt(encrypted_authentication_token);
   if (authentication_token.empty()) {
@@ -412,8 +418,7 @@ void BraveAccountService::GetServiceToken(mojom::Service service,
         mojom::GetServiceTokenResult::New(std::move(service_token)));
   }
 
-  auto encrypted_authentication_token =
-      pref_service_->GetString(prefs::kBraveAccountAuthenticationToken);
+  auto encrypted_authentication_token = GetEncryptedAuthenticationToken();
   if (encrypted_authentication_token.empty()) {
     return std::move(callback).Run(
         base::unexpected(MakeClientError<mojom::GetServiceTokenError>(
@@ -513,8 +518,9 @@ void BraveAccountService::OnRegisterFinalize(
           .and_then([&](auto success_body)
                         -> base::expected<mojom::RegisterFinalizeResultPtr,
                                           mojom::RegisterErrorPtr> {
-            pref_service_->SetString(prefs::kBraveAccountVerificationToken,
-                                     encrypted_verification_token);
+            SetLoggedOutWithVerification(
+                encrypted_verification_token,
+                mojom::LoggedOutVerificationIntent::kRegistration);
 
             return mojom::RegisterFinalizeResult::New();
           });
@@ -560,11 +566,7 @@ void BraveAccountService::OnRegisterVerify(RegisterVerifyCallback callback,
                       kAuthenticationTokenEncryptionFailed));
             }
 
-            pref_service_->SetString(prefs::kBraveAccountEmailAddress,
-                                     success_body.email);
-            pref_service_->SetString(prefs::kBraveAccountAuthenticationToken,
-                                     encrypted_authentication_token);
-            pref_service_->ClearPref(prefs::kBraveAccountVerificationToken);
+            SetLoggedIn(success_body.email, encrypted_authentication_token);
 
             return mojom::RegisterVerifyResult::New();
           });
@@ -590,10 +592,6 @@ void BraveAccountService::OnResendConfirmationEmail(
       base::unexpected(MakeServerError<mojom::ResendConfirmationEmailError>(
           CHECK_DEREF(response.status_code),
           std::move(response.body->error()))));
-}
-
-void BraveAccountService::OnVerificationTokenChanged() {
-  NotifyObservers();
 }
 
 void BraveAccountService::OnLoginInitialize(LoginInitializeCallback callback,
@@ -678,10 +676,7 @@ void BraveAccountService::OnLoginFinalize(LoginFinalizeCallback callback,
                       kAuthenticationTokenEncryptionFailed));
             }
 
-            pref_service_->SetString(prefs::kBraveAccountEmailAddress,
-                                     success_body.email);
-            pref_service_->SetString(prefs::kBraveAccountAuthenticationToken,
-                                     encrypted_authentication_token);
+            SetLoggedIn(success_body.email, encrypted_authentication_token);
 
             return mojom::LoginFinalizeResult::New();
           });
@@ -689,12 +684,13 @@ void BraveAccountService::OnLoginFinalize(LoginFinalizeCallback callback,
   std::move(callback).Run(std::move(result));
 }
 
-void BraveAccountService::OnAuthenticationTokenChanged() {
-  NotifyObservers();
+void BraveAccountService::OnAccountStateChanged() {
+  const auto account_state = GetAccountState();
+  for (auto& observer : observers_) {
+    observer->OnAccountStateChanged(account_state.Clone());
+  }
 
-  if (pref_authentication_token_.GetValue().empty()) {
-    pref_service_->ClearPref(prefs::kBraveAccountEmailAddress);
-    pref_service_->ClearPref(prefs::kBraveAccountServiceTokens);
+  if (!account_state->is_logged_in()) {
     return auth_validate_timer_.Stop();
   }
 
@@ -714,8 +710,7 @@ void BraveAccountService::AuthValidate(
     RequestHandle current_auth_validate_request) {
   current_auth_validate_request.reset();
 
-  const auto encrypted_authentication_token =
-      pref_service_->GetString(prefs::kBraveAccountAuthenticationToken);
+  const auto encrypted_authentication_token = GetEncryptedAuthenticationToken();
   if (encrypted_authentication_token.empty()) {
     return;
   }
@@ -747,49 +742,35 @@ void BraveAccountService::OnAuthValidate(AuthValidate::Response response) {
           : "";
 
   if (!email.empty()) {
-    pref_service_->SetString(prefs::kBraveAccountEmailAddress, email);
+    ScopedDictPrefUpdate(pref_service_, prefs::kBraveAccountState)
+        ->Set(prefs::keys::kEmail, email);
   } else if (response.status_code >= 400 && response.status_code < 500) {
-    // Clear the auth token (and stop polling) to prevent
-    // presenting invalid state to the user and issuing invalid requests.
-    return pref_service_->ClearPref(prefs::kBraveAccountAuthenticationToken);
+    // Force logged-out (and stop polling) to prevent presenting invalid state
+    // to the user and issuing invalid requests.
+    return SetLoggedOut();
   }
 
   // Replace watchdog timer with the normal cadence.
   ScheduleAuthValidate(kAuthValidatePollInterval);
 }
 
-void BraveAccountService::OnEmailAddressChanged() {
-  // Only notify observers if logged in, since the email is only relevant in
-  // the LoggedIn state.
-  if (!pref_authentication_token_.GetValue().empty()) {
-    NotifyObservers();
-  }
-}
-
-void BraveAccountService::NotifyObservers() {
-  const auto state = GetAccountState();
-  for (auto& observer : observers_) {
-    observer->OnAccountStateChanged(state.Clone());
-  }
-}
-
 mojom::AccountStatePtr BraveAccountService::GetAccountState() const {
-  if (!pref_service_->GetString(prefs::kBraveAccountAuthenticationToken)
-           .empty()) {
-    std::string email =
-        pref_service_->GetString(prefs::kBraveAccountEmailAddress);
-    CHECK(!email.empty());
-    return mojom::AccountState::NewLoggedIn(
-        mojom::LoggedInState::New(std::move(email)));
+  const auto& account_state = pref_service_->GetDict(prefs::kBraveAccountState);
+  const auto* kind = account_state.FindString(prefs::keys::kKind);
+  const auto* verification = account_state.FindDict(prefs::keys::kVerification);
+  const auto intent =
+      verification ? verification->FindInt(prefs::keys::kVerificationIntent)
+                   : std::nullopt;
+
+  if (kind && *kind == prefs::state_kinds::kLoggedIn) {
+    const auto* email = account_state.FindString(prefs::keys::kEmail);
+    CHECK(email && !email->empty());
+    return mojom::AccountState::NewLoggedIn(mojom::LoggedInState::New(
+        *email, MakeVerification<mojom::LoggedInVerificationPtr>(intent)));
   }
 
-  if (!pref_service_->GetString(prefs::kBraveAccountVerificationToken)
-           .empty()) {
-    return mojom::AccountState::NewVerification(
-        mojom::VerificationState::New());
-  }
-
-  return mojom::AccountState::NewLoggedOut(mojom::LoggedOutState::New());
+  return mojom::AccountState::NewLoggedOut(mojom::LoggedOutState::New(
+      MakeVerification<mojom::LoggedOutVerificationPtr>(intent)));
 }
 
 void BraveAccountService::OnGetServiceToken(
@@ -802,9 +783,7 @@ void BraveAccountService::OnGetServiceToken(
   // accounts while the request was in flight, don't cache or return the service
   // token as it belongs to a different (or no longer valid) authentication
   // session.
-  if (const auto current_encrypted_authentication_token =
-          pref_service_->GetString(prefs::kBraveAccountAuthenticationToken);
-      current_encrypted_authentication_token !=
+  if (GetEncryptedAuthenticationToken() !=
       expected_encrypted_authentication_token) {
     return std::move(callback).Run(
         base::unexpected(MakeClientError<mojom::GetServiceTokenError>(
@@ -849,18 +828,14 @@ void BraveAccountService::OnGetServiceToken(
                           kServiceTokenEncryptionFailed));
             }
 
-            auto service_tokens =
-                pref_service_->GetDict(prefs::kBraveAccountServiceTokens)
-                    .Clone();
-            service_tokens.Set(service_name,
-                               base::DictValue()
-                                   .Set(prefs::keys::kServiceToken,
-                                        std::move(encrypted_service_token))
-                                   .Set(prefs::keys::kLastFetched,
-                                        base::TimeToValue(base::Time::Now())));
-
-            pref_service_->SetDict(prefs::kBraveAccountServiceTokens,
-                                   std::move(service_tokens));
+            ScopedDictPrefUpdate(pref_service_, prefs::kBraveAccountState)
+                ->EnsureDict(prefs::keys::kServiceTokens)
+                ->Set(service_name,
+                      base::DictValue()
+                          .Set(prefs::keys::kServiceToken,
+                               std::move(encrypted_service_token))
+                          .Set(prefs::keys::kLastFetched,
+                               base::TimeToValue(base::Time::Now())));
 
             return mojom::GetServiceTokenResult::New(
                 std::move(success_body.auth_token));
@@ -871,9 +846,10 @@ void BraveAccountService::OnGetServiceToken(
 
 std::string BraveAccountService::GetCachedServiceToken(
     const std::string& service_name) const {
+  const auto* service_tokens = pref_service_->GetDict(prefs::kBraveAccountState)
+                                   .FindDict(prefs::keys::kServiceTokens);
   const auto* service =
-      pref_service_->GetDict(prefs::kBraveAccountServiceTokens)
-          .FindDict(service_name);
+      service_tokens ? service_tokens->FindDict(service_name) : nullptr;
   if (!service) {
     return "";
   }
@@ -896,6 +872,74 @@ std::string BraveAccountService::GetCachedServiceToken(
   }
 
   return Decrypt(*encrypted_service_token);
+}
+
+void BraveAccountService::SetLoggedOut() {
+  pref_service_->SetDict(prefs::kBraveAccountState,
+                         base::DictValue().Set(prefs::keys::kKind,
+                                               prefs::state_kinds::kLoggedOut));
+}
+
+void BraveAccountService::SetLoggedOutWithVerification(
+    const std::string& encrypted_verification_token,
+    mojom::LoggedOutVerificationIntent intent) {
+  pref_service_->SetDict(
+      prefs::kBraveAccountState,
+      base::DictValue()
+          .Set(prefs::keys::kKind, prefs::state_kinds::kLoggedOut)
+          .Set(prefs::keys::kVerification,
+               base::DictValue()
+                   .Set(prefs::keys::kVerificationToken,
+                        encrypted_verification_token)
+                   .Set(prefs::keys::kVerificationIntent,
+                        static_cast<int>(intent))));
+}
+
+void BraveAccountService::SetLoggedIn(
+    const std::string& email,
+    const std::string& encrypted_authentication_token) {
+  pref_service_->SetDict(
+      prefs::kBraveAccountState,
+      base::DictValue()
+          .Set(prefs::keys::kKind, prefs::state_kinds::kLoggedIn)
+          .Set(prefs::keys::kEmail, email)
+          .Set(prefs::keys::kAuthenticationToken,
+               encrypted_authentication_token));
+}
+
+std::string BraveAccountService::GetEncryptedAuthenticationToken() const {
+  const auto* token = pref_service_->GetDict(prefs::kBraveAccountState)
+                          .FindString(prefs::keys::kAuthenticationToken);
+  return token ? *token : "";
+}
+
+template <typename Intent>
+std::string BraveAccountService::GetEncryptedVerificationToken(
+    Intent intent) const {
+  const auto verification = [&] {
+    const auto state = GetAccountState();
+    if constexpr (std::same_as<Intent, mojom::LoggedOutVerificationIntent>) {
+      return state->is_logged_out()
+                 ? std::move(state->get_logged_out()->verification)
+                 : nullptr;
+    } else {
+      static_assert(std::same_as<Intent, mojom::LoggedInVerificationIntent>,
+                    "Intent must be Logged{Out,In}VerificationIntent!");
+      return state->is_logged_in()
+                 ? std::move(state->get_logged_in()->verification)
+                 : nullptr;
+    }
+  }();
+
+  if (!verification || verification->intent != intent) {
+    return "";
+  }
+
+  const auto* token =
+      CHECK_DEREF(pref_service_->GetDict(prefs::kBraveAccountState)
+                      .FindDict(prefs::keys::kVerification))
+          .FindString(prefs::keys::kVerificationToken);
+  return token ? *token : "";
 }
 
 std::string BraveAccountService::Encrypt(const std::string& plain_text) const {

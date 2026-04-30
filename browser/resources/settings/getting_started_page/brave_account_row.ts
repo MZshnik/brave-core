@@ -182,7 +182,7 @@ export class SettingsBraveAccountRowElement extends I18nMixinLit(CrLitElement) {
           </leo-button>
         `
       ),
-      [AccountStateFieldTags.VERIFICATION]: () => html`
+      [AccountStateFieldTags.LOGGED_OUT]: () => this.state!.loggedOut!.verification ? html`
         ${this.createFirstRow(
           this.i18n(
               BraveAccountSettingsStrings
@@ -218,8 +218,7 @@ export class SettingsBraveAccountRowElement extends I18nMixinLit(CrLitElement) {
                        .SETTINGS_BRAVE_ACCOUNT_CANCEL_REGISTRATION_BUTTON_LABEL)}
           </leo-button>
         </div>
-      `,
-      [AccountStateFieldTags.LOGGED_OUT]: () => this.createFirstRow(
+      ` : this.createFirstRow(
         this.i18n(
             BraveAccountSettingsStrings
                  .SETTINGS_BRAVE_ACCOUNT_LOGGED_OUT_ROW_TITLE),
