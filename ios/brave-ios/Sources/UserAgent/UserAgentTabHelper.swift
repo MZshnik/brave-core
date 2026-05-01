@@ -19,7 +19,7 @@ extension TabDataValues {
   }
 }
 
-public class UserAgentTabHelper {
+@MainActor public class UserAgentTabHelper {
   private weak var tab: (any TabState)?
   private weak var braveUserAgentExceptions: BraveUserAgentExceptionsIOS?
   private struct DecidePolicyRequestInfo {
@@ -75,37 +75,6 @@ extension UserAgentTabHelper: TabObserver {
   public func tab(_ tab: some TabState, didFailNavigationWithError error: any Error) {
     requestsForCurrentNavigation.removeAll()
   }
-
-  public func tabDidRedirectNavigation(_ tab: some TabState) {
-    guard FeatureList.kShouldCancelRequestsForUserAgentChange.enabled,
-      requestsForCurrentNavigation.count > 1,
-      let lastRequestInfo = requestsForCurrentNavigation.last,
-      case let expectedUserAgentForFinalRequest = self.userAgent(for: lastRequestInfo.request),
-      let headerUserAgent = lastRequestInfo.request.allHTTPHeaderFields?["User-Agent"],
-      headerUserAgent != expectedUserAgentForFinalRequest
-    else {
-      return
-    }
-    tab.stopLoading()
-
-    // When changing user agent, we must cancel & restart the request
-    // as the headers will contain the old user agent which may result
-    // in webcompat issues if we need to hide we are Brave from the
-    // domain
-    var modifiedRequest = lastRequestInfo.request
-    modifiedRequest.setValue(
-      expectedUserAgentForFinalRequest,
-      forHTTPHeaderField: "User-Agent"
-    )
-
-    if let url = modifiedRequest.url {
-      Logger.module.debug(
-        "Cancelled and restarting request to `\(url.absoluteString, privacy: .private)`"
-      )
-    }
-
-    tab.loadRequest(modifiedRequest)
-  }
 }
 
 extension UserAgentTabHelper: TabPolicyDecider {
@@ -114,6 +83,7 @@ extension UserAgentTabHelper: TabPolicyDecider {
     shouldAllowRequest request: URLRequest,
     requestInfo: WebRequestInfo
   ) async -> WebPolicyDecision {
+    guard FeatureList.kShouldCancelRequestsForUserAgentChange.enabled else { return .allow }
     // we only care about main frame navigations as the user agent is
     // determined by main frame domain.
     guard requestInfo.isMainFrame else { return .allow }
@@ -123,8 +93,37 @@ extension UserAgentTabHelper: TabPolicyDecider {
         requestInfo: requestInfo
       )
     )
-    // We don't need to block / allow as our logic will reject/cancel/stop
-    // in `tabDidRedirectNavigation` if needed
+    if requestsForCurrentNavigation.count > 1,
+      let lastRequestInfo = requestsForCurrentNavigation.last,
+      case let expectedUserAgentForFinalRequest = self.userAgent(for: lastRequestInfo.request),
+      let headerUserAgent = lastRequestInfo.request.allHTTPHeaderFields?[kHeaderUserAgent],
+      headerUserAgent != expectedUserAgentForFinalRequest,
+      // attempt to confirm redirect
+      lastRequestInfo.requestInfo.navigationType == .linkActivated,
+      lastRequestInfo.request.allHTTPHeaderFields?[kHeaderSecFetchMode] == "navigate",
+      lastRequestInfo.request.allHTTPHeaderFields?[kHeaderSecFetchDest] == "document"
+    {
+      // When changing user agent, we must cancel & restart the request
+      // as the headers will contain the old user agent which may result
+      // in webcompat issues if we need to hide we are Brave from the
+      // domain
+      var modifiedRequest = lastRequestInfo.request
+      modifiedRequest.setValue(
+        expectedUserAgentForFinalRequest,
+        forHTTPHeaderField: kHeaderUserAgent
+      )
+      if let url = modifiedRequest.url {
+        Logger.module.debug(
+          "Cancelled and restarting request to `\(url.absoluteString, privacy: .private)`"
+        )
+      }
+      tab.loadRequest(modifiedRequest)
+      return .cancel
+    }
     return .allow
   }
 }
+
+private let kHeaderUserAgent = "User-Agent"
+private let kHeaderSecFetchMode = "Sec-Fetch-Mode"
+private let kHeaderSecFetchDest = "Sec-Fetch-Dest"
