@@ -7,6 +7,7 @@ import("//brave/components/ai_chat/core/common/buildflags/buildflags.gni")
 import("//brave/components/brave_ads/buildflags/buildflags.gni")
 import("//brave/components/brave_education/buildflags.gni")
 import("//brave/components/brave_news/common/buildflags/buildflags.gni")
+import("//brave/components/brave_wallet/common/buildflags/buildflags.gni")
 import("//brave/components/containers/buildflags/buildflags.gni")
 import("//brave/components/email_aliases/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
@@ -85,4 +86,9 @@ if (enable_email_aliases) {
     "//brave/browser/ui/email_aliases",
     "//brave/browser/ui/webui/email_aliases",
   ]
+}
+
+if (enable_brave_wallet) {
+  brave_ui_allow_circular_includes_from +=
+      [ "//brave/browser/ui/webui/brave_wallet/wallet_page" ]
 }
