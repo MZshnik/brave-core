@@ -340,7 +340,7 @@ IN_PROC_BROWSER_TEST_P(BraveBrowserViewWithRoundedCornersTest,
   RunScheduledLayouts();
 
   views::View* contents_container = browser_view()->contents_container();
-  views::View* side_panel = browser_view()->contents_height_side_panel();
+  views::View* side_panel = browser_view()->toolbar_height_side_panel();
   const auto rounded_corners_margin = BraveContentsViewUtil::kMarginThickness;
   const auto rounded_corners_border_radius = GetRoundedCornersBorderRadius();
   const auto rounded_corners_border_radius_at_window_corner =
@@ -407,7 +407,7 @@ IN_PROC_BROWSER_TEST_P(BraveBrowserViewWithRoundedCornersTest,
   RunScheduledLayouts();
 
   views::View* contents_container = browser_view()->contents_container();
-  views::View* side_panel = browser_view()->contents_height_side_panel();
+  views::View* side_panel = browser_view()->toolbar_height_side_panel();
   const auto rounded_corners_margin = BraveContentsViewUtil::kMarginThickness;
   const auto rounded_corners_border_radius = GetRoundedCornersBorderRadius();
   const auto rounded_corners_border_radius_at_window_corner =
@@ -448,7 +448,7 @@ IN_PROC_BROWSER_TEST_P(BraveBrowserViewWithRoundedCornersTest,
   RunScheduledLayouts();
 
   views::View* contents_container = browser_view()->contents_container();
-  views::View* side_panel = browser_view()->contents_height_side_panel();
+  views::View* side_panel = browser_view()->toolbar_height_side_panel();
   const auto rounded_corners_margin = BraveContentsViewUtil::kMarginThickness;
   const auto rounded_corners_border_radius = GetRoundedCornersBorderRadius();
   const auto rounded_corners_border_radius_at_window_corner =

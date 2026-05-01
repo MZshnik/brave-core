@@ -73,13 +73,11 @@ END_METADATA
 
 }  // namespace
 
-SidePanel::SidePanel(BrowserView* browser_view,
-                     SidePanelType type,
-                     bool has_border)
+SidePanel::SidePanel(BrowserView* browser_view)
     : horizontal_alignment_(
-          GetHorizontalAlignment(browser_view->GetProfile()->GetPrefs(), type)),
-      browser_view_(browser_view),
-      type_(type) {
+          GetHorizontalAlignment(browser_view->GetProfile()->GetPrefs(),
+                                 SidePanelType::kToolbar)),
+      browser_view_(browser_view) {
   // Disable mirroring as this panel can have different margin per alignment.
   SetMirrored(false);
 
@@ -183,7 +181,7 @@ gfx::Size SidePanel::GetMinimumSize() const {
   // fits in the remaining space beside the toolbar. Use the upstream-compatible
   // minimum for toolbar panels so that clamping logic works correctly.
   // The content-height panel (inside the sidebar) keeps kDefaultSidePanelWidth.
-  if (type_ == SidePanelType::kToolbar) {
+  if (current_entry_type_ == SidePanelType::kToolbar) {
     return gfx::Size(SidePanelEntry::kSidePanelDefaultContentWidth, 0);
   }
   return gfx::Size(sidebar::kDefaultSidePanelWidth, 0);
@@ -263,7 +261,14 @@ void SidePanel::AddHeaderView(std::unique_ptr<views::View> view) {}
 
 void SidePanel::RemoveHeaderView() {}
 
-void SidePanel::SetOutlineVisibility(bool visible) {}
+void SidePanel::SetCurrentEntryType(SidePanelType type) {
+  current_entry_type_ = type;
+  UpdateHorizontalAlignment();
+}
+
+SidePanelType SidePanel::GetCurrentEntryType() const {
+  return current_entry_type_;
+}
 
 void SidePanel::ResetSidePanelAnimationContent() {}
 
@@ -304,8 +309,8 @@ void SidePanel::UpdateVisibility(bool should_be_open) {
 }
 
 void SidePanel::UpdateHorizontalAlignment() {
-  horizontal_alignment_ =
-      GetHorizontalAlignment(browser_view_->GetProfile()->GetPrefs(), type_);
+  horizontal_alignment_ = GetHorizontalAlignment(
+      browser_view_->GetProfile()->GetPrefs(), current_entry_type_);
 
   InvalidateLayout();
 }

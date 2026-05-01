@@ -343,19 +343,19 @@ BraveBrowserView::BraveBrowserView(Browser* browser) : BrowserView(browser) {
           AddChildView(std::make_unique<SidebarContainerView>(
               browser_, SidePanelCoordinator::From(browser_), nullptr));
 #if BUILDFLAG(ENABLE_SIDEBAR_V2)
-      contents_height_side_panel_->SetResizeArea(
+      toolbar_height_side_panel_->SetResizeArea(
           std::make_unique<views::BraveSidePanelResizeArea>(
-              contents_height_side_panel_));
+              toolbar_height_side_panel_));
 #endif
     } else {
-      // V1: wrap chromium's side panel inside SidebarContainerView.
-      auto original_side_panel =
-          RemoveChildViewT(contents_height_side_panel_.get());
+      // V1: create a content-height SidePanel and wrap it in
+      // SidebarContainerView.
+      auto content_side_panel = std::make_unique<SidePanel>(this);
+      content_side_panel->SetCurrentEntryType(SidePanelType::kContent);
       sidebar_container_view_ =
           AddChildView(std::make_unique<SidebarContainerView>(
               browser_, SidePanelCoordinator::From(browser_),
-              std::move(original_side_panel)));
-      contents_height_side_panel_ = sidebar_container_view_->side_panel();
+              std::move(content_side_panel)));
     }
 
 #if defined(USE_AURA)
@@ -1058,13 +1058,14 @@ void BraveBrowserView::UpdateVerticalTabStripBorder() {
 
 void BraveBrowserView::UpdateSidebarBorder() {
 #if BUILDFLAG(ENABLE_SIDEBAR_V2)
-  if (contents_height_side_panel_) {
-    contents_height_side_panel_->SetRoundedBorderEnabled(
+  if (toolbar_height_side_panel_) {
+    toolbar_height_side_panel_->SetRoundedBorderEnabled(
         ShouldUseBraveWebViewRoundedCornersForContents(browser_));
   }
 #else
-  if (contents_height_side_panel_) {
-    contents_height_side_panel_->UpdateBorder();
+  if (sidebar_container_view_) {
+    CHECK(sidebar_container_view_->side_panel());
+    sidebar_container_view_->side_panel()->UpdateBorder();
   }
 #endif
 
