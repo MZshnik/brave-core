@@ -91,6 +91,20 @@ class FarblingProtectionHelper {
     return String(data: data, encoding: .utf8)!
   }
 
+  static func makeFarblingParams2(
+    from randomConfiguration: RandomConfiguration
+  ) throws -> FarblingData {
+    srand48(randomConfiguration.domainKeyHEX.hashValue)
+    let farblingData = FarblingData(
+      fudgeFactor: Float.seededRandom(in: 0.99...1),
+      fakeVoiceName: fakeVoiceNames.seededRandom() ?? "",
+      fakePluginData: FarblingProtectionHelper.makeFakePluginData(),
+      randomVoiceIndexScale: Float(drand48()),
+      randomHardwareIndexScale: Float(drand48())
+    )
+    return farblingData
+  }
+
   /// Generate fake plugin data to be injected into the farbling protection script
   private static func makeFakePluginData() -> [FarblingData.FakePluginData] {
     guard BraveCore.FeatureList.kBraveIOSEnableFarblingPlugins.enabled else {

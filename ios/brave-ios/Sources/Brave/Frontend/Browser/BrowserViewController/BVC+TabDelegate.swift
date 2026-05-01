@@ -314,12 +314,51 @@ extension BrowserViewController: TabDelegate {
     }
   }
 
+  private func handleBraveWindowPrompt(tab: any TabState, prompt: String, pageURL: URL) -> String? {
+    if !prompt.hasPrefix("{") {
+      return nil
+    }
+    // Check if its one of our scripts
+    struct MessageRequest: Decodable {
+      var request: String
+    }
+    struct FarblingResponse: Encodable {
+      var isFarblingEnabled: Bool
+      var args: FarblingProtectionHelper.FarblingData
+    }
+    do {
+      let message = try JSONDecoder().decode(MessageRequest.self, from: Data(prompt.utf8))
+      if message.request == "FarblingRequest", let url = tab.lastCommittedURL,
+        let baseDomain = url.baseDomain
+      {
+        let isFarblingEnabled =
+          tab.braveShieldsHelper?.isShieldExpected(
+            for: url,
+            shield: .fpProtection,
+            considerAllShieldsOption: true
+          ) ?? true
+        let randomConfiguration = RandomConfiguration(etld: baseDomain)
+        let fakeParams = try FarblingProtectionHelper.makeFarblingParams2(from: randomConfiguration)
+        let data = try JSONEncoder().encode(
+          FarblingResponse(isFarblingEnabled: isFarblingEnabled, args: fakeParams)
+        )
+        return String(decoding: data, as: UTF8.self)
+      }
+    } catch {
+
+    }
+    return nil
+  }
+
   public func tab(
     _ tab: some TabState,
     runJavaScriptConfirmPanelWithPrompt prompt: String,
     defaultText: String?,
     pageURL: URL
   ) async -> String? {
+    if let response = handleBraveWindowPrompt(tab: tab, prompt: prompt, pageURL: pageURL) {
+      return response
+    }
     guard case let origin = pageURL.origin, !origin.isOpaque, tab === tabManager.selectedTab else {
       return nil
     }
