@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/common/BUILD.gn b/third_party/blink/common/BUILD.gn
-index 490137f7fbc6aa160779fd6956a9ff92ff7b9e31..5d7e3f47fbcef489da3615d7b5b23832aafa1ac0 100644
+index a0362edd80793126db0b9fd1fa40c60ae67c1f47..a1ffb22c990c297ab196d85bad951ed90d4d4a9b 100644
 --- a/third_party/blink/common/BUILD.gn
 +++ b/third_party/blink/common/BUILD.gn
-@@ -353,6 +353,7 @@ source_set("common") {
+@@ -354,6 +354,7 @@ source_set("common") {
    if (is_chromeos || is_android || is_win || is_castos || is_fuchsia) {
      defines = [ "ENABLE_PROTECTED_MEDIA_IDENTIFIER_PERMISSION" ]
    }
@@ -10,7 +10,7 @@ index 490137f7fbc6aa160779fd6956a9ff92ff7b9e31..5d7e3f47fbcef489da3615d7b5b23832
  }
  
  test("blink_common_unittests") {
-@@ -500,6 +501,7 @@ source_set("common_unittests_sources") {
+@@ -501,6 +502,7 @@ source_set("common_unittests_sources") {
    # TODO(crbug.com/40031409): Fix code that adds exit-time destructors and
    # enable the diagnostic by removing this line.
    configs += [ "//build/config/compiler:no_exit_time_destructors" ]

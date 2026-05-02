@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index 636be0216b0d553282ebacb59b041f91ccc7ff9d..34e3ef99dceaf42c2d0e5319207a95c4ee6b2d76 100644
+index 732fdb9f998055b3baceda92f0ee14a3eea2be51..3dc23e878afb7fd4633e72fe5f8f04748e116851 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -1706,6 +1706,7 @@ static_library("browser") {
+@@ -1656,6 +1656,7 @@ static_library("browser") {
      "//chrome/browser/sharing/glic_experimental_triggering:impl",
      "//chrome/browser/ui/webauthn:impl",
    ]
@@ -10,7 +10,7 @@ index 636be0216b0d553282ebacb59b041f91ccc7ff9d..34e3ef99dceaf42c2d0e5319207a95c4
  
    if (is_android) {
      deps += [
-@@ -5237,6 +5238,7 @@ group("browser_public_dependencies") {
+@@ -5073,6 +5074,7 @@ group("browser_public_dependencies") {
        "//components/offline_pages/core/background:background_offliner",
      ]
    }

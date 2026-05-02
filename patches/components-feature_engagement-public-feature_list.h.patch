@@ -1,5 +1,5 @@
 diff --git a/components/feature_engagement/public/feature_list.h b/components/feature_engagement/public/feature_list.h
-index 9226cd25d0b03ffd1b806a14ae6e3568e201aece..0ab999b748dfbc6fabc16a9388b44e2cb41c6a74 100644
+index ac25050e3604675be9db11ffe4081e65b07ef175..6f2a719ac156116efef95f9273c35c875bc23b35 100644
 --- a/components/feature_engagement/public/feature_list.h
 +++ b/components/feature_engagement/public/feature_list.h
 @@ -580,6 +580,7 @@ DEFINE_VARIATION_PARAM(kIPHiOSTabGroupsDesktopFeature,
@@ -10,7 +10,7 @@ index 9226cd25d0b03ffd1b806a14ae6e3568e201aece..0ab999b748dfbc6fabc16a9388b44e2c
  
  #if !BUILDFLAG(IS_IOS)
  DEFINE_VARIATION_PARAM(kIPHResumptionRailFeature, "IPH_ResumptionRail");
-@@ -591,6 +592,7 @@ DEFINE_VARIATION_PARAM(kIPHResumptionRailFeature, "IPH_ResumptionRail");
+@@ -596,6 +597,7 @@ DEFINE_VARIATION_PARAM(kIPHSearchPromotionFeature,
  inline constexpr flags_ui::FeatureEntry::FeatureVariation
      kIPHDemoModeChoiceVariations[] = {
  // clang-format off

@@ -1,5 +1,5 @@
 diff --git a/chrome/browser/startup_data.cc b/chrome/browser/startup_data.cc
-index 57ccf58618fb75ac909b7b2812ee3ede0b1333a5..745d21543de71be6287804a2e8944390611faac5 100644
+index 3631126b2f5e78aa719f448ed5cc5e9d46e0f029..aebad1eb62d5f9b9ee3536ea8824cc41cc0ae000 100644
 --- a/chrome/browser/startup_data.cc
 +++ b/chrome/browser/startup_data.cc
 @@ -223,6 +223,7 @@ void StartupData::CreateServicesInternal() {

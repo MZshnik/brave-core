@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/ui/views/page_action/page_action_view.cc b/chrome/browser/ui/views/page_action/page_action_view.cc
-index 590c15bc44e034f9ebdbde1fc038ca26590ad7ce..ee407dedf8d830f2f204651fa007be1e0e96f03b 100644
+index d889a084b2b40c4140ff01ae050c19a343cce3be..8eee7dbe248737b2294dbf4557f0f123fe1ec898 100644
 --- a/chrome/browser/ui/views/page_action/page_action_view.cc
 +++ b/chrome/browser/ui/views/page_action/page_action_view.cc
-@@ -156,7 +156,7 @@ void PageActionView::OnPageActionModelChanged(
+@@ -167,7 +167,7 @@ void PageActionView::OnPageActionModelChanged(
    if (!visible) {
      ResetSlideAnimation(/*show=*/false);
      NotifyIsChipShowingChange();
