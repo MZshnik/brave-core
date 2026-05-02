@@ -44,6 +44,7 @@ class FakeNavButtonProvider : public ui::NavButtonProvider {
   }
   gfx::Insets GetTopAreaSpacing() const override { return {}; }
   int GetInterNavButtonSpacing() const override { return 0; }
+  int GetNavButtonHeight(bool maximized) const override { return 0; }
 };
 
 // WindowFrameProvider that records the top_area_height argument of the most
@@ -67,6 +68,11 @@ class FakeWindowFrameProvider : public ui::WindowFrameProvider {
   }
   void reset() { last_top_area_height_.reset(); }
 
+  // ui::WindowFrameProvider overrides:
+  int GetTopAreaMinHeightDip() override { return 24; }
+  gfx::Insets GetTopAreaPaddingDip() override { return gfx::Insets::VH(6, 0); }
+  gfx::Insets GetTopAreaBorderDip() override { return gfx::Insets(); }
+
  private:
   std::optional<int> last_top_area_height_;
 };
@@ -75,10 +81,14 @@ class FakeWindowFrameProvider : public ui::WindowFrameProvider {
 // requirement and routes GetWindowFrameProvider() to a fake we can inspect.
 class FakeLinuxUiWithNavButtons : public ui::FakeLinuxUi {
  public:
-  std::unique_ptr<ui::NavButtonProvider> CreateNavButtonProvider() override {
+  std::unique_ptr<ui::NavButtonProvider> CreateNavButtonProvider(
+      ui::FrameType type) override {
     return std::make_unique<FakeNavButtonProvider>();
   }
-  ui::WindowFrameProvider* GetWindowFrameProvider(bool, bool, bool) override {
+  ui::WindowFrameProvider* GetWindowFrameProvider(ui::FrameType,
+                                                  bool,
+                                                  bool,
+                                                  bool) override {
     return &frame_provider_;
   }
   // FakeLinuxUi returns nullptr; override to prevent null-dereference when
