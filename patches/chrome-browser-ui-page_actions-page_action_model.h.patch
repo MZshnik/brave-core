@@ -1,7 +1,7 @@
-diff --git a/chrome/browser/ui/views/page_action/page_action_model.h b/chrome/browser/ui/views/page_action/page_action_model.h
-index 1dce812529afdb47751d91cbf676d2c233213bb3..eebc853de25204d478d9e06859893e1e39312af7 100644
---- a/chrome/browser/ui/views/page_action/page_action_model.h
-+++ b/chrome/browser/ui/views/page_action/page_action_model.h
+diff --git a/chrome/browser/ui/page_actions/page_action_model.h b/chrome/browser/ui/page_actions/page_action_model.h
+index 7dacb805a0c88fc8d78095f29550e70375639634..4115732ee0bce4472a7b228750d71cabf8b01e38 100644
+--- a/chrome/browser/ui/page_actions/page_action_model.h
++++ b/chrome/browser/ui/page_actions/page_action_model.h
 @@ -40,6 +40,22 @@ class PageActionModelInterface {
   public:
    PageActionModelInterface() = default;
